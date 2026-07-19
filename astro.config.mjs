@@ -2,12 +2,11 @@ import { defineConfig } from "astro/config";
 import react from "@astrojs/react";
 import tailwind from "@astrojs/tailwind";
 import cloudflare from "@astrojs/cloudflare";
-import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 
 export default defineConfig({
-  experimental: {
-    nodejsCompat: true
+  compat: {
+    nodejs: true
   },
   integrations: [
     react(),
