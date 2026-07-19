@@ -1,0 +1,33 @@
+---
+interface Props {
+  items?: string[];
+  speed?: number;
+}
+const { items = [
+  "欢迎访问 Sezario. 博客",
+  "专注于全栈开发与用户体验",
+  "TypeScript · React · Astro · Go",
+  "持续学习，持续输出",
+  "接受新项目合作",
+], speed = 30 } = Astro.props;
+const text = items.join("  ·  ");
+---
+
+<div class="marquee-wrapper overflow-hidden whitespace-nowrap py-3 border-y border-border/30 bg-muted/20" data-animate>
+  <div class="marquee-track inline-block" style={`animation-duration: ${speed}s;`}>
+    <span class="inline-block text-sm text-muted-foreground/60 tracking-wide">{text}  ·  {text}</span>
+  </div>
+</div>
+
+<style>
+  .marquee-track {
+    animation: marquee-scroll linear infinite;
+  }
+  .marquee-wrapper:hover .marquee-track {
+    animation-play-state: paused;
+  }
+  @keyframes marquee-scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+</style>

@@ -1,0 +1,171 @@
+---
+---
+
+<section id="hero" class="relative flex flex-col items-center justify-center min-h-[90vh] md:min-h-screen px-6 text-center overflow-hidden z-10">
+  <div class="relative z-10 max-w-4xl mx-auto">
+    <div class="mb-8 inline-flex items-center gap-2.5 rounded-full border border-primary/15 bg-primary/5 px-5 py-2 text-xs text-primary/80 backdrop-blur-sm hero-badge">
+      <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+      接受新项目合作
+    </div>
+
+    <h1 class="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tighter mb-8 leading-[0.9]">
+      <span class="block gradient-text hero-title" data-text="全栈">全栈</span>
+      <span class="block text-foreground hero-title" data-text="开发者" style="animation-delay: 0.1s">开发者</span>
+    </h1>
+
+    <p class="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto mb-6 leading-relaxed hero-subtitle">
+      用极致细节打磨高性能的 Web 体验。
+    </p>
+
+    <p class="text-sm text-muted-foreground/60 mb-12 font-mono tracking-wide hero-subtitle">
+      <span class="text-primary font-semibold">&gt;</span> TypeScript · React · Node.js · Astro · Go
+    </p>
+
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 hero-buttons">
+      <a
+        href="/posts"
+        class="magnetic-btn group relative inline-flex items-center gap-2.5 rounded-xl bg-primary px-8 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-shadow duration-300 hover:shadow-xl hover:shadow-primary/30 overflow-hidden"
+      >
+        <span class="absolute inset-0 bg-gradient-to-r from-primary via-primary/80 to-orange-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+        <span class="relative">浏览文章</span>
+        <svg class="relative w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+        </svg>
+      </a>
+      <a
+        href="https://github.com/Sezario1231"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="magnetic-btn inline-flex items-center gap-2.5 rounded-xl border border-border bg-card/50 px-8 py-3.5 text-sm font-semibold text-foreground backdrop-blur-sm transition-all duration-300 hover:bg-card hover:border-primary/30 hover:shadow-lg hover:shadow-primary/10"
+      >
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+        </svg>
+        GitHub
+      </a>
+    </div>
+  </div>
+
+  <!-- 视差光斑 -->
+  <div class="hero-parallax absolute inset-0 -z-10 overflow-hidden">
+    <div class="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-primary/8 dark:bg-primary/6 rounded-full blur-[120px] animate-float" data-speed="0.02"></div>
+    <div class="absolute bottom-1/4 right-1/3 w-[400px] h-[400px] bg-orange-300/8 dark:bg-orange-400/5 rounded-full blur-[100px] animate-float" style="animation-delay: -1.5s" data-speed="0.035"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-amber-200/5 dark:bg-emerald-400/4 rounded-full blur-[140px] animate-float" style="animation-delay: -3s" data-speed="0.015"></div>
+  </div>
+</section>
+
+<script>
+  // ====== 磁吸按钮 ======
+  function initMagneticButtons() {
+    document.querySelectorAll<HTMLElement>(".magnetic-btn").forEach((btn) => {
+      const strength = 0.3;
+      let raf: number;
+      let targetX = 0, targetY = 0;
+      let currentX = 0, currentY = 0;
+
+      function animate() {
+        currentX += (targetX - currentX) * 0.15;
+        currentY += (targetY - currentY) * 0.15;
+        btn.style.transform = `translate(${currentX}px, ${currentY}px)`;
+        if (Math.abs(targetX - currentX) > 0.01 || Math.abs(targetY - currentY) > 0.01) {
+          raf = requestAnimationFrame(animate);
+        }
+      }
+
+      btn.addEventListener("mousemove", (e: MouseEvent) => {
+        const rect = btn.getBoundingClientRect();
+        const x = e.clientX - rect.left - rect.width / 2;
+        const y = e.clientY - rect.top - rect.height / 2;
+        targetX = x * strength;
+        targetY = y * strength;
+        cancelAnimationFrame(raf);
+        animate();
+      });
+
+      btn.addEventListener("mouseleave", () => {
+        targetX = 0;
+        targetY = 0;
+        cancelAnimationFrame(raf);
+        animate();
+      });
+    });
+  }
+
+  // ====== 文字解码效果 ======
+  function initTextScramble() {
+    const chars = "!<>-_\\/[]{}—=+*^?#_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef0123456789";
+    document.querySelectorAll<HTMLElement>(".hero-title").forEach((el) => {
+      const original = el.dataset.text || el.textContent || "";
+      let iteration = 0;
+      const maxIterations = original.length * 4;
+      const interval = setInterval(() => {
+        el.textContent = original
+          .split("")
+          .map((char, i) => {
+            if (i < iteration / 4) return original[i];
+            return chars[Math.floor(Math.random() * chars.length)];
+          })
+          .join("");
+        iteration++;
+        if (iteration > maxIterations) {
+          el.textContent = original;
+          clearInterval(interval);
+        }
+      }, 30);
+    });
+  }
+
+  // ====== Hero 视差 ======
+  function initParallax() {
+    const hero = document.getElementById("hero");
+    if (!hero) return;
+    const blobs = hero.querySelectorAll<HTMLElement>("[data-speed]");
+    let ticking = false;
+
+    window.addEventListener("mousemove", (e) => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const cx = window.innerWidth / 2;
+        const cy = window.innerHeight / 2;
+        const dx = (e.clientX - cx) / cx;
+        const dy = (e.clientY - cy) / cy;
+        blobs.forEach((blob) => {
+          const speed = parseFloat(blob.dataset.speed || "0.02");
+          const x = dx * speed * 100;
+          const y = dy * speed * 100;
+          blob.style.transform = `translate(${x}px, ${y}px)`;
+        });
+        ticking = false;
+      });
+    }, { passive: true });
+  }
+
+  // ====== Hero 入场动画 ======
+  function initHeroEntrance() {
+    const elements = [
+      { el: document.querySelector(".hero-badge"), delay: 100 },
+      ...Array.from(document.querySelectorAll(".hero-title")).map((el, i) => ({ el, delay: 200 + i * 150 })),
+      ...Array.from(document.querySelectorAll(".hero-subtitle")).map((el, i) => ({ el, delay: 500 + i * 100 })),
+      { el: document.querySelector(".hero-buttons"), delay: 800 },
+    ];
+    elements.forEach(({ el, delay }) => {
+      if (el) {
+        el.classList.add("hero-enter");
+        setTimeout(() => {
+          el.classList.add("active");
+        }, delay);
+      }
+    });
+  }
+
+  function initHero() {
+    initHeroEntrance();
+    initTextScramble();
+    initMagneticButtons();
+    initParallax();
+  }
+
+  document.addEventListener("DOMContentLoaded", initHero);
+  document.addEventListener("astro:page-load", initHero);
+</script>

@@ -1,0 +1,65 @@
+---
+---
+<script is:inline>
+  // ====== 控制台彩蛋 ======
+  console.log(
+    "%c Sezario. %c 全栈开发者博客 ",
+    "background: linear-gradient(135deg, #c86428, #e8943a); color: white; padding: 6px 12px; border-radius: 6px 0 0 6px; font-weight: bold; font-size: 14px;",
+    "background: #1a1a2e; color: #c86428; padding: 6px 12px; border-radius: 0 6px 6px 0; font-size: 14px;"
+  );
+  console.log(
+    "%c 你发现了控制台彩蛋！ 🎉\n技术栈: Astro + React + Tailwind CSS + Supabase\n如果你喜欢这个博客，欢迎 star 我的项目。",
+    "color: #888; font-size: 12px; line-height: 1.6;"
+  );
+
+  // ====== 节日皮肤检测 ======
+  (function() {
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const day = now.getDate();
+    let theme = null;
+
+    // 圣诞节 12.24-12.25
+    if (month === 12 && (day === 24 || day === 25)) {
+      theme = "christmas";
+    }
+    // 新年 1.1-1.3
+    else if (month === 1 && day <= 3) {
+      theme = "newyear";
+    }
+    // 中秋节（大约9月中旬，简化为9.15前后）
+    else if (month === 9 && day >= 12 && day <= 18) {
+      theme = "midautumn";
+    }
+
+    if (theme) {
+      document.documentElement.classList.add(`holiday-${theme}`);
+    }
+  })();
+
+  // ====== 禁止右键查看源码保护（可选） ======
+  // document.addEventListener('contextmenu', e => e.preventDefault());
+</script>
+
+<style is:inline>
+  /* 节日皮肤 — 圣诞 */
+  .holiday-christmas {
+    --holiday-accent: #c41e3a;
+    --holiday-accent2: #2d7a3a;
+  }
+  .holiday-christmas .header-inner {
+    border-bottom-color: rgba(196, 30, 58, 0.15);
+  }
+
+  /* 节日皮肤 — 新年 */
+  .holiday-newyear {
+    --holiday-accent: #d4af37;
+    --holiday-accent2: #c41e3a;
+  }
+
+  /* 节日皮肤 — 中秋 */
+  .holiday-midautumn {
+    --holiday-accent: #f0c040;
+    --holiday-accent2: #8b4513;
+  }
+</style>

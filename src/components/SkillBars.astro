@@ -1,0 +1,60 @@
+---
+interface Skill {
+  name: string;
+  level: number; // 0-100
+  icon?: string;
+}
+interface Props {
+  skills?: Skill[];
+}
+const { skills = [
+  { name: "TypeScript", level: 92 },
+  { name: "React", level: 88 },
+  { name: "Node.js", level: 85 },
+  { name: "Astro", level: 80 },
+  { name: "Go", level: 70 },
+  { name: "Tailwind CSS", level: 90 },
+]} = Astro.props;
+---
+
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+  {skills.map((skill, i) => (
+    <div class="skill-item group p-4 rounded-xl border border-border/40 bg-card/50 hover:border-primary/20 transition-all duration-300" data-animate data-delay={i * 60}>
+      <div class="flex items-center justify-between mb-2.5">
+        <span class="text-sm font-medium text-foreground">{skill.name}</span>
+        <span class="text-xs text-muted-foreground/60 font-mono">{skill.level}%</span>
+      </div>
+      <div class="h-2 rounded-full bg-muted/50 overflow-hidden">
+        <div
+          class="skill-bar h-full rounded-full bg-gradient-to-r from-primary to-orange-400 dark:from-primary dark:to-emerald-400 transition-all duration-1000 ease-out"
+          style={`width: 0%; --target-width: ${skill.level}%`}
+        ></div>
+      </div>
+    </div>
+  ))}
+</div>
+
+<script>
+  function initSkillBars() {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const bar = entry.target as HTMLElement;
+            const targetWidth = bar.style.getPropertyValue("--target-width");
+            setTimeout(() => {
+              bar.style.width = targetWidth;
+            }, 200);
+            observer.unobserve(bar);
+          }
+        });
+      },
+      { threshold: 0.3 }
+    );
+
+    document.querySelectorAll(".skill-bar").forEach((bar) => observer.observe(bar));
+  }
+
+  document.addEventListener("DOMContentLoaded", initSkillBars);
+  document.addEventListener("astro:page-load", initSkillBars);
+</script>

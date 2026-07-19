@@ -1,0 +1,51 @@
+---
+import { getCollection } from "astro:content";
+
+const allPosts = await getCollection("posts");
+const published = allPosts.filter((p) => !p.data.draft);
+
+// 统计每月发文数
+const monthCounts: Record<string, number> = {};
+published.forEach((p) => {
+  const key = `${p.data.date.getFullYear()}-${String(p.data.date.getMonth() + 1).padStart(2, "0")}`;
+  monthCounts[key] = (monthCounts[key] || 0) + 1;
+});
+
+// 生成最近12个月
+const months: { key: string; label: string; count: number }[] = [];
+const now = new Date();
+for (let i = 11; i >= 0; i--) {
+  const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+  const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  const label = d.toLocaleDateString("zh-CN", { month: "short" });
+  months.push({ key, label, count: monthCounts[key] || 0 });
+}
+
+const maxCount = Math.max(...months.map((m) => m.count), 1);
+---
+
+<div class="contribution-calendar" data-animate>
+  <div class="flex items-center gap-3 mb-4">
+    <h3 class="text-sm font-semibold">发文日历</h3>
+    <span class="text-xs text-muted-foreground/60">{published.length} 篇文章</span>
+  </div>
+  <div class="flex gap-1.5 items-end h-16">
+    {months.map((m) => {
+      const intensity = m.count > 0 ? 0.2 + (m.count / maxCount) * 0.8 : 0.05;
+      return (
+        <div class="flex-1 flex flex-col items-center gap-1">
+          <div
+            class="cal-cell w-full rounded-sm transition-all duration-300 hover:scale-110 cursor-default"
+            style={`height: ${Math.max(8, (m.count / maxCount) * 100)}%; background: hsl(28, 80%, 52%, ${intensity});`}
+            title={`${m.label}: ${m.count} 篇`}
+          ></div>
+        </div>
+      );
+    })}
+  </div>
+  <div class="flex gap-1.5 mt-1">
+    {months.map((m) => (
+      <span class="flex-1 text-center text-[9px] text-muted-foreground/40">{m.label}</span>
+    ))}
+  </div>
+</div>

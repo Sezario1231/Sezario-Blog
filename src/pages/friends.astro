@@ -1,0 +1,57 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+
+interface Friend {
+  name: string;
+  url: string;
+  avatar?: string;
+  description: string;
+}
+const friends: Friend[] = [
+  { name: "Astro", url: "https://astro.build", description: "The web framework for content-driven websites." },
+  { name: "Vercel", url: "https://vercel.com", description: "Develop. Preview. Ship." },
+  { name: "Supabase", url: "https://supabase.com", description: "The open source Firebase alternative." },
+  { name: "Tailwind CSS", url: "https://tailwindcss.com", description: "A utility-first CSS framework." },
+];
+---
+
+<BaseLayout title="友链 - Sezario." description="友情链接。">
+  <section class="container max-w-4xl mx-auto px-5 md:px-8 py-16 md:py-24">
+    <div class="mb-10" data-animate>
+      <h1 class="text-4xl md:text-5xl font-bold tracking-tight mb-3">友链</h1>
+      <p class="text-muted-foreground">推荐一些优秀的网站和项目。</p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {friends.map((f, i) => (
+        <a
+          href={f.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="friend-card group relative p-5 rounded-xl border border-border/40 bg-card/50 hover:border-primary/20 hover:shadow-lg transition-all duration-300 overflow-hidden"
+          style={{ perspective: "600px" }}
+          data-animate
+          data-delay={i * 60}
+        >
+          <div class="friend-inner relative z-10 transition-transform duration-500" style="transform-style: preserve-3d;">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-orange-300/20 dark:from-primary/30 dark:to-emerald-400/20 flex items-center justify-center text-sm font-bold text-primary shrink-0">
+                {f.name.charAt(0)}
+              </div>
+              <div>
+                <h3 class="text-sm font-semibold group-hover:text-primary transition-colors">{f.name}</h3>
+                <p class="text-xs text-muted-foreground/60 truncate">{f.url}</p>
+              </div>
+            </div>
+            <p class="text-xs text-muted-foreground/70 leading-relaxed">{f.description}</p>
+          </div>
+        </a>
+      ))}
+    </div>
+
+    <div class="mt-12 p-6 rounded-2xl border border-border/40 bg-card/50 text-center" data-animate>
+      <p class="text-sm text-muted-foreground/70 mb-3">想交换友链？</p>
+      <a href="/contact" class="text-sm text-primary hover:underline">通过联系页面告诉我</a>
+    </div>
+  </section>
+</BaseLayout>

@@ -1,0 +1,43 @@
+---
+---
+<div class="status-card p-5 rounded-xl border border-border/40 bg-card/50 space-y-3" data-animate>
+  <h3 class="text-sm font-semibold mb-3">状态</h3>
+  <div class="grid grid-cols-2 gap-3">
+    <div class="flex items-center gap-2">
+      <svg class="w-3.5 h-3.5 text-primary/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>
+      </svg>
+      <span class="text-xs text-muted-foreground/70" id="status-time">--:--</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <svg class="w-3.5 h-3.5 text-primary/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+      <span class="text-xs text-muted-foreground/70" id="status-date">----/--/--</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <svg class="w-3.5 h-3.5 text-green-500/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+      </svg>
+      <span class="text-xs text-muted-foreground/70">运行正常</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <svg class="w-3.5 h-3.5 text-primary/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+      </svg>
+      <span class="text-xs text-muted-foreground/70">Sezario</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  function updateStatusTime() {
+    const now = new Date();
+    const timeEl = document.getElementById("status-time");
+    const dateEl = document.getElementById("status-date");
+    if (timeEl) timeEl.textContent = now.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    if (dateEl) dateEl.textContent = now.toLocaleDateString("zh-CN");
+  }
+  updateStatusTime();
+  setInterval(updateStatusTime, 1000);
+</script>

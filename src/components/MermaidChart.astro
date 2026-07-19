@@ -1,0 +1,31 @@
+---
+interface Props {
+  chart: string;
+}
+const { chart } = Astro.props;
+---
+
+<div class="mermaid-wrapper my-6 rounded-xl border border-border/40 bg-card/50 p-4 overflow-x-auto" data-animate>
+  <pre class="mermaid text-sm text-center">{chart.trim()}</pre>
+</div>
+
+<script>
+  async function initMermaid() {
+    if (typeof window === "undefined") return;
+    const mermaidEls = document.querySelectorAll(".mermaid");
+    if (mermaidEls.length === 0) return;
+
+    try {
+      const mermaid = (await import("https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs")).default;
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: document.documentElement.classList.contains("dark") ? "dark" : "default",
+        securityLevel: "loose",
+      });
+      await mermaid.run();
+    } catch {}
+  }
+
+  document.addEventListener("DOMContentLoaded", initMermaid);
+  document.addEventListener("astro:page-load", initMermaid);
+</script>

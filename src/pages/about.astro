@@ -1,0 +1,89 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import TagCloud from "@/components/TagCloud.astro";
+import Timeline from "@/components/Timeline.astro";
+import Avatar3D from "@/components/Avatar3D.astro";
+import SkillBars from "@/components/SkillBars.astro";
+import RandomQuote from "@/components/RandomQuote.astro";
+import ContributionCalendar from "@/components/ContributionCalendar.astro";
+import ReadingList from "@/components/ReadingList.astro";
+import StatusCard from "@/components/StatusCard.astro";
+
+const techStack = [
+  "TypeScript", "React", "Next.js", "Astro", "Vue",
+  "Node.js", "Go", "Python", "PostgreSQL", "Redis",
+  "Docker", "Kubernetes", "AWS", "Cloudflare",
+  "Tailwind CSS", "Figma", "Git", "Linux",
+];
+
+const milestones = [
+  {
+    date: new Date("2024-01-01"),
+    title: "开始构建开源项目",
+    description: "专注于开发者工具和 Web 基础设施。",
+  },
+  {
+    date: new Date("2023-06-01"),
+    title: "加入一家 A 轮创业公司担任前端负责人",
+    description: "从零搭建设计系统，服务于 50+ 工程师。",
+  },
+  {
+    date: new Date("2022-01-01"),
+    title: "开始职业生涯",
+    description: "全栈开发，聚焦性能与开发体验。",
+  },
+];
+---
+
+<BaseLayout title="关于 - Sezario." description="关于我与我的工作。">
+  <section class="container max-w-4xl mx-auto px-5 md:px-8 py-16 md:py-24">
+    <div class="mb-14" data-animate>
+      <Avatar3D name="Sezario" />
+      <h1 class="text-4xl md:text-5xl font-bold tracking-tight mb-3 text-center">关于</h1>
+    </div>
+
+    <div class="mb-12" data-animate>
+      <RandomQuote />
+    </div>
+
+    <div class="space-y-6 mb-20 text-muted-foreground leading-relaxed" data-animate>
+      <p>
+        对性能与设计的交汇点痴迷的开发者。专注于构建开发者真正好用的工具、系统和界面。
+      </p>
+      <p>
+        目前专注于全栈开发、设计系统和开发者体验优化。不写代码的时候，大概在研究系统架构或参与开源项目。
+      </p>
+      <p>
+        想交流的话，欢迎通过<a href="/contact" class="text-primary hover:underline">联系</a>页面找到我。
+      </p>
+    </div>
+
+    <div class="mb-20" data-animate>
+      <h2 class="text-2xl font-bold tracking-tight mb-8">技术栈</h2>
+      <TagCloud tags={techStack} />
+      <div class="mt-8">
+        <SkillBars />
+      </div>
+    </div>
+
+    <div class="mb-20" data-animate>
+      <h2 class="text-2xl font-bold tracking-tight mb-8">发文记录</h2>
+      <ContributionCalendar />
+    </div>
+
+    <div class="mb-20" data-animate>
+      <h2 class="text-2xl font-bold tracking-tight mb-8">在读</h2>
+      <ReadingList />
+    </div>
+
+    <div class="mb-20" data-animate>
+      <h2 class="text-2xl font-bold tracking-tight mb-8">实时状态</h2>
+      <StatusCard />
+    </div>
+
+    <div data-animate>
+      <h2 class="text-2xl font-bold tracking-tight mb-8">经历</h2>
+      <Timeline items={milestones} />
+    </div>
+  </section>
+</BaseLayout>

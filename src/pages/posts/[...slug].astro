@@ -1,0 +1,200 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { getEntry, getCollection } from "astro:content";
+import Giscus from "@/components/Giscus";
+import ShareButtons from "@/components/ShareButtons.astro";
+import RelatedPosts from "@/components/RelatedPosts.astro";
+import LikeButton from "@/components/LikeButton.astro";
+import Breadcrumb from "@/components/Breadcrumb.astro";
+
+const { slug } = Astro.params;
+
+if (!slug || Array.isArray(slug)) {
+  return Astro.redirect("/404");
+}
+
+const post = await getEntry("posts", slug);
+
+if (!post || post.data.draft) {
+  return Astro.redirect("/404");
+}
+
+const { Content, headings } = await post.render();
+
+const allPosts = await getCollection("posts");
+const publishedPosts = allPosts
+  .filter((p) => !p.data.draft)
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+const currentIndex = publishedPosts.findIndex((p) => p.slug === slug);
+const prevPost = currentIndex < publishedPosts.length - 1 ? publishedPosts[currentIndex + 1] : null;
+const nextPost = currentIndex > 0 ? publishedPosts[currentIndex - 1] : null;
+
+const wordCount = post.body ? post.body.split(/\s+/).length : 0;
+const readingTime = Math.max(1, Math.ceil(wordCount / 200));
+
+const tocHeadings = headings.filter((h: any) => h.depth >= 2 && h.depth <= 3);
+---
+
+<BaseLayout title={`${post.data.title} - Sezario.`} description={post.data.description} image={post.data.coverImage} type="article">
+  <article class="container max-w-6xl mx-auto px-5 md:px-8 py-16 md:py-24">
+    <div class="flex flex-col lg:flex-row gap-12">
+      <div class="flex-1 min-w-0 max-w-3xl">
+        <Breadcrumb items={[{ label: "文章", href: "/posts" }, { label: post.data.title }]} />
+
+        {post.data.coverImage && (
+          <div class="mb-8 rounded-2xl overflow-hidden border border-border/40" data-animate>
+            <img src={post.data.coverImage} alt={post.data.title} class="w-full h-48 md:h-64 object-cover" loading="lazy" />
+          </div>
+        )}
+
+        <header class="mb-12" data-animate>
+          <div class="flex items-center gap-3 mb-4 text-sm text-muted-foreground">
+            <time datetime={post.data.date.toISOString()}>
+              {post.data.date.toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" })}
+            </time>
+            <span class="w-1 h-1 rounded-full bg-muted-foreground/40"></span>
+            <span>{readingTime} 分钟阅读</span>
+            <span class="w-1 h-1 rounded-full bg-muted-foreground/40"></span>
+            <span class="text-primary">{post.data.category}</span>
+          </div>
+
+          <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight leading-tight mb-5">
+            {post.data.title}
+          </h1>
+
+          <p class="text-lg text-muted-foreground leading-relaxed">
+            {post.data.description}
+          </p>
+
+          <div class="flex flex-wrap gap-2 mt-6">
+            {post.data.tags.map((tag: string) => (
+              <span class="inline-flex items-center rounded-full bg-secondary/60 px-2.5 py-1 text-xs text-muted-foreground">
+                {tag}
+              </span>
+            ))}
+          </div>
+
+          <div class="flex items-center gap-4 mt-6 pt-6 border-t border-border/30">
+            <ShareButtons title={post.data.title} description={post.data.description} url={`/posts/${slug}`} />
+            <div class="ml-auto">
+              <LikeButton slug={slug} />
+            </div>
+          </div>
+        </header>
+
+        <div class="prose prose-lg dark:prose-invert max-w-none" data-animate>
+          <Content />
+        </div>
+
+        <div class="border-t border-border/50 mt-16 pt-8" data-animate>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {prevPost && (
+              <a
+                href={`/posts/${prevPost.slug}`}
+                class="group flex flex-col p-5 rounded-xl border border-border/50 bg-card/50 hover:border-primary/20 hover:shadow-md transition-all duration-300"
+              >
+                <span class="text-xs text-muted-foreground mb-1">&larr; 上一篇</span>
+                <span class="font-medium group-hover:text-primary transition-colors duration-200 line-clamp-1">
+                  {prevPost.data.title}
+                </span>
+              </a>
+            )}
+            {nextPost && (
+              <a
+                href={`/posts/${nextPost.slug}`}
+                class="group flex flex-col items-end text-right p-5 rounded-xl border border-border/50 bg-card/50 hover:border-primary/20 hover:shadow-md transition-all duration-300 md:ml-auto"
+              >
+                <span class="text-xs text-muted-foreground mb-1">下一篇 &rarr;</span>
+                <span class="font-medium group-hover:text-primary transition-colors duration-200 line-clamp-1">
+                  {nextPost.data.title}
+                </span>
+              </a>
+            )}
+          </div>
+        </div>
+
+        <RelatedPosts currentSlug={slug} tags={post.data.tags} category={post.data.category} />
+
+        <div data-animate>
+          <Giscus
+            client:visible
+            repo="YOUR_GITHUB_USER/YOUR_REPO_NAME"
+            repoId="YOUR_REPO_ID"
+            category="Announcements"
+            categoryId="YOUR_CATEGORY_ID"
+            term={"/" + slug}
+          />
+        </div>
+      </div>
+
+      {tocHeadings.length > 0 && (
+        <aside class="hidden lg:block w-56 shrink-0">
+          <div class="sticky top-24">
+            <div class="flex items-center justify-between mb-4">
+              <p class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">本页目录</p>
+              <span class="text-[10px] text-primary/60 font-mono" id="toc-progress">0%</span>
+            </div>
+            <!-- 阅读进度条 -->
+            <div class="h-0.5 rounded-full bg-muted/30 mb-4 overflow-hidden">
+              <div class="h-full bg-primary/50 rounded-full transition-all duration-150" id="toc-bar" style="width: 0%"></div>
+            </div>
+            <nav class="space-y-1.5">
+              {tocHeadings.map((heading: any) => (
+                <a
+                  href={`#${heading.slug}`}
+                  class:list={[
+                    "block text-sm py-1 border-l-2 pl-3 transition-all duration-200 hover:text-foreground hover:border-primary",
+                    heading.depth === 2 ? "text-muted-foreground" : "text-muted-foreground/60 pl-5",
+                  ]}
+                >
+                  {heading.text}
+                </a>
+              ))}
+            </nav>
+          </div>
+        </aside>
+      )}
+    </div>
+  </article>
+</BaseLayout>
+
+<script>
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const id = entry.target.id;
+          document.querySelectorAll(`aside nav a`).forEach((link) => {
+            link.classList.remove("text-foreground", "border-primary", "font-medium", "active");
+            link.classList.add("text-muted-foreground", "border-transparent");
+            if (link.getAttribute("href") === `#${id}`) {
+              link.classList.add("text-foreground", "border-primary", "font-medium", "active");
+              link.classList.remove("text-muted-foreground", "border-transparent");
+            }
+          });
+        }
+      });
+    },
+    { rootMargin: "-80px 0px -60% 0px", threshold: 0 }
+  );
+
+  document.querySelectorAll("article h2[id], article h3[id]").forEach((h) => observer.observe(h));
+
+  // 阅读进度
+  function updateReadingProgress() {
+    const article = document.querySelector("article");
+    const bar = document.getElementById("toc-bar");
+    const text = document.getElementById("toc-progress");
+    if (!article || !bar) return;
+    const rect = article.getBoundingClientRect();
+    const total = rect.height - window.innerHeight;
+    const current = -rect.top;
+    const pct = Math.min(100, Math.max(0, Math.round((current / total) * 100)));
+    bar.style.width = pct + "%";
+    if (text) text.textContent = pct + "%";
+  }
+  window.addEventListener("scroll", updateReadingProgress, { passive: true });
+  updateReadingProgress();
+</script>
+</script>

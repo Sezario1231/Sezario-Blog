@@ -1,0 +1,20 @@
+---
+---
+<div class="online-counter flex items-center gap-1.5 text-xs text-muted-foreground/60" data-animate>
+  <span class="relative flex h-2 w-2">
+    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+    <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+  </span>
+  <span>当前 <span id="online-count">1</span> 人在线</span>
+</div>
+
+<script>
+  function initOnlineCounter() {
+    // 模拟在线人数（实际可用 Supabase Realtime 或其他方案）
+    const count = Math.floor(Math.random() * 5) + 1;
+    const el = document.getElementById("online-count");
+    if (el) el.textContent = String(count);
+  }
+  document.addEventListener("DOMContentLoaded", initOnlineCounter);
+  document.addEventListener("astro:page-load", initOnlineCounter);
+</script>

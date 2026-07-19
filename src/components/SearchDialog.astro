@@ -1,0 +1,145 @@
+---
+---
+<div id="search-overlay" class="fixed inset-0 z-[200] hidden">
+  <div class="search-backdrop absolute inset-0 bg-black/50 backdrop-blur-sm" id="search-backdrop"></div>
+  <div class="relative z-10 flex justify-center pt-[15vh] px-4">
+    <div class="search-panel w-full max-w-xl rounded-2xl border border-border/60 bg-card shadow-2xl overflow-hidden">
+      <div class="flex items-center gap-3 px-5 py-4 border-b border-border/40">
+        <svg class="w-5 h-5 text-muted-foreground/60 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input
+          id="search-input"
+          type="text"
+          placeholder="搜索文章..."
+          class="flex-1 bg-transparent text-foreground placeholder:text-muted-foreground/50 outline-none text-sm"
+          autocomplete="off"
+        />
+        <kbd class="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] text-muted-foreground/50 border border-border/50 rounded font-mono">ESC</kbd>
+      </div>
+      <div id="search-results" class="max-h-[50vh] overflow-y-auto p-2">
+        <p class="text-center text-sm text-muted-foreground/50 py-8">输入关键词搜索文章</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  interface Post {
+    title: string;
+    description: string;
+    slug: string;
+    category: string;
+    tags: string[];
+    date: string;
+  }
+
+  let allPosts: Post[] = [];
+  let loaded = false;
+
+  async function loadPosts() {
+    if (loaded) return;
+    try {
+      const res = await fetch("/api/search.json");
+      allPosts = await res.json();
+      loaded = true;
+    } catch {}
+  }
+
+  function search(query: string): Post[] {
+    if (!query.trim()) return [];
+    const q = query.toLowerCase();
+    return allPosts.filter(
+      (p) =>
+        p.title.toLowerCase().includes(q) ||
+        p.description.toLowerCase().includes(q) ||
+        p.category.toLowerCase().includes(q) ||
+        p.tags.some((t) => t.toLowerCase().includes(q))
+    );
+  }
+
+  function renderResults(results: Post[], query: string) {
+    const container = document.getElementById("search-results");
+    if (!container) return;
+    if (!query.trim()) {
+      container.innerHTML = `<p class="text-center text-sm text-muted-foreground/50 py-8">输入关键词搜索文章</p>`;
+      return;
+    }
+    if (results.length === 0) {
+      container.innerHTML = `<p class="text-center text-sm text-muted-foreground/50 py-8">未找到相关文章</p>`;
+      return;
+    }
+    container.innerHTML = results
+      .map(
+        (p) => `
+      <a href="/posts/${p.slug}" class="search-result-item flex flex-col gap-1 px-4 py-3 rounded-xl hover:bg-muted/50 transition-colors duration-150 group">
+        <div class="flex items-center gap-2 text-xs text-muted-foreground/60">
+          <span>${new Date(p.date).toLocaleDateString("zh-CN")}</span>
+          <span class="w-1 h-1 rounded-full bg-muted-foreground/30"></span>
+          <span class="text-primary/80">${p.category}</span>
+        </div>
+        <span class="text-sm font-medium group-hover:text-primary transition-colors duration-150">${highlightMatch(p.title, query)}</span>
+        <span class="text-xs text-muted-foreground/60 line-clamp-1">${highlightMatch(p.description, query)}</span>
+      </a>
+    `
+      )
+      .join("");
+  }
+
+  function highlightMatch(text: string, query: string): string {
+    if (!query) return text;
+    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
+    return text.replace(regex, '<mark class="bg-primary/20 text-foreground rounded px-0.5">$1</mark>');
+  }
+
+  function openSearch() {
+    const overlay = document.getElementById("search-overlay");
+    if (!overlay) return;
+    overlay.classList.remove("hidden");
+    document.body.style.overflow = "hidden";
+    loadPosts();
+    setTimeout(() => {
+      document.getElementById("search-input")?.focus();
+    }, 50);
+  }
+
+  function closeSearch() {
+    const overlay = document.getElementById("search-overlay");
+    if (!overlay) return;
+    overlay.classList.add("hidden");
+    document.body.style.overflow = "";
+    const input = document.getElementById("search-input") as HTMLInputElement;
+    if (input) input.value = "";
+    renderResults([], "");
+  }
+
+  // 快捷键
+  document.addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+      e.preventDefault();
+      const overlay = document.getElementById("search-overlay");
+      if (overlay?.classList.contains("hidden")) {
+        openSearch();
+      } else {
+        closeSearch();
+      }
+    }
+    if (e.key === "Escape") {
+      closeSearch();
+    }
+  });
+
+  // 点击遮罩关闭
+  document.getElementById("search-backdrop")?.addEventListener("click", closeSearch);
+
+  // 输入搜索
+  document.getElementById("search-input")?.addEventListener("input", (e) => {
+    const query = (e.target as HTMLInputElement).value;
+    const results = search(query);
+    renderResults(results, query);
+  });
+
+  // 暴露全局函数
+  (window as any).openSearch = openSearch;
+  (window as any).closeSearch = closeSearch;
+</script>

@@ -1,0 +1,91 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="404 - 页面走丢了" description="你访问的页面不存在。">
+  <section class="container max-w-2xl mx-auto px-5 md:px-8 py-16 md:py-32 text-center">
+    <div class="relative mb-8">
+      <div class="text-[120px] md:text-[180px] font-black leading-none tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-primary/20 to-orange-300/20 dark:from-primary/30 dark:to-emerald-400/20 select-none">
+        404
+      </div>
+      <div class="absolute inset-0 flex items-center justify-center">
+        <div class="floating-ghost text-6xl md:text-8xl" style="animation: float 3s ease-in-out infinite;">
+          &#128123;
+        </div>
+      </div>
+    </div>
+
+    <h1 class="text-2xl md:text-3xl font-bold mb-4">页面走丢了</h1>
+    <p class="text-muted-foreground mb-8 max-w-md mx-auto">
+      你要找的页面可能已被移除、改名，或者从未存在过。
+    </p>
+
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+      <a
+        href="/"
+        class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 active:scale-[0.97]"
+      >
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9,22 9,12 15,12 15,22"/>
+        </svg>
+        返回首页
+      </a>
+      <a
+        href="/posts"
+        class="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-border bg-card/50 text-sm font-medium hover:border-primary/20 hover:bg-card transition-all duration-300"
+      >
+        浏览文章
+      </a>
+    </div>
+
+    <!-- 404 小游戏：点击次数统计 -->
+    <div class="mt-16">
+      <p class="text-xs text-muted-foreground/50 mb-3">点击下方按钮看看</p>
+      <button
+        id="404-btn"
+        class="px-4 py-2 rounded-full border border-border/50 text-xs text-muted-foreground/60 hover:text-primary hover:border-primary/30 transition-all duration-200 active:scale-95"
+      >
+        别点了
+      </button>
+      <p id="404-counter" class="text-xs text-muted-foreground/40 mt-2 h-4"></p>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+</style>
+
+<script>
+  let clickCount = 0;
+  const messages = [
+    "别点了",
+    "真的没有",
+    "你在找什么？",
+    "这里什么都没有",
+    "你很执着",
+    "继续点？",
+    "好吧你赢了",
+    "再点我要报警了",
+    "你是不是闲的",
+    "恭喜你发现了一个彩蛋",
+  ];
+
+  document.getElementById("404-btn")?.addEventListener("click", () => {
+    clickCount++;
+    const btn = document.getElementById("404-btn");
+    const counter = document.getElementById("404-counter");
+    if (btn) {
+      btn.textContent = messages[Math.min(clickCount - 1, messages.length - 1)];
+      btn.style.transform = `rotate(${Math.random() * 10 - 5}deg)`;
+      setTimeout(() => { btn.style.transform = ""; }, 150);
+    }
+    if (counter) {
+      counter.textContent = `已点击 ${clickCount} 次`;
+    }
+  });
+</script>

@@ -1,0 +1,190 @@
+---
+import "@/styles/globals.css";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import AuroraBackground from "@/components/AuroraBackground.astro";
+import ParticleCanvas from "@/components/ParticleCanvas";
+import GlobalEffects from "@/components/GlobalEffects.astro";
+import EasterEggs from "@/components/EasterEggs.astro";
+import CosmicEnding from "@/components/CosmicEnding.astro";
+import MusicPlayer from "@/components/MusicPlayer.astro";
+import { ViewTransitions } from "astro:transitions";
+
+export interface Props {
+  title: string;
+  description?: string;
+  image?: string;
+  type?: string;
+}
+
+const { title, description, image, type = "website" } = Astro.props;
+const siteUrl = Astro.site?.toString().replace(/\/$/, "") || "";
+const pageUrl = `${siteUrl}${Astro.url.pathname}`;
+const ogImage = image ? (image.startsWith("http") ? image : `${siteUrl}${image}`) : `${siteUrl}/og-default.png`;
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description ?? title} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content={type} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description ?? title} />
+    <meta property="og:url" content={pageUrl} />
+    <meta property="og:site_name" content="Sezario." />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:locale" content="zh_CN" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@Sezario1231" />
+    <meta name="twitter:creator" content="@Sezario1231" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description ?? title} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": type === "article" ? "Article" : "WebSite",
+      name: title,
+      description: description ?? title,
+      url: pageUrl,
+      ...(type === "article" ? {} : {
+        author: { "@type": "Person", name: "Sezario", url: siteUrl },
+        publisher: { "@type": "Organization", name: "Sezario.", url: siteUrl },
+      }),
+    })} />
+
+    <!-- 字体预加载 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" media="print" onload="this.media='all'" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
+
+    <!-- 路由预取 -->
+    <meta name="astro-prefetch" content="hover" />
+
+    <title>{title}</title>
+    <ViewTransitions />
+    <script is:inline>
+      (function() {
+        var t = localStorage.getItem('theme');
+        if (t === 'light' || t === 'dark') {
+          document.documentElement.classList.toggle('dark', t === 'dark');
+        } else {
+          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          document.documentElement.classList.toggle('dark', prefersDark);
+        }
+      })();
+      document.addEventListener('astro:after-swap', function() {
+        var t = localStorage.getItem('theme');
+        if (t === 'light' || t === 'dark') {
+          document.documentElement.classList.toggle('dark', t === 'dark');
+        } else {
+          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          document.documentElement.classList.toggle('dark', prefersDark);
+        }
+      });
+    </script>
+  </head>
+  <body class="min-h-screen flex flex-col antialiased">
+    <!-- 真实滚动进度条 -->
+    <div id="scroll-progress" class="fixed top-0 left-0 right-0 z-[100] h-[3px] bg-gradient-to-r from-primary via-orange-400 to-primary scale-x-0 origin-left"></div>
+
+    <AuroraBackground />
+    <ParticleCanvas client:idle />
+    <Header />
+    <main class="flex-1 pt-14 md:pt-16 relative z-10">
+      <slot />
+    </main>
+    <Footer />
+
+    <button
+      id="back-to-top"
+      class="fixed bottom-6 right-6 z-50 p-3 rounded-full bg-card/80 border border-border/50 backdrop-blur-sm shadow-lg text-muted-foreground hover:text-primary hover:border-primary/30 transition-all duration-300 opacity-0 translate-y-4 pointer-events-none"
+      aria-label="回到顶部"
+    >
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+      </svg>
+    </button>
+    <GlobalEffects />
+    <EasterEggs />
+    <CosmicEnding />
+    <MusicPlayer />
+  </body>
+</html>
+
+<script>
+  // ====== 滚动揭示动画 ======
+  function initScrollReveal() {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry, i) => {
+          if (entry.isIntersecting) {
+            const el = entry.target as HTMLElement;
+            const delay = parseInt(el.dataset.delay || "0");
+            setTimeout(() => {
+              el.classList.add("revealed");
+            }, delay);
+            observer.unobserve(el);
+          }
+        });
+      },
+      { threshold: 0.06, rootMargin: "0px 0px -10px 0px" }
+    );
+    document.querySelectorAll("[data-animate]").forEach((el, i) => {
+      (el as HTMLElement).dataset.delay = String((i % 6) * 60);
+      observer.observe(el);
+    });
+  }
+
+  // ====== Back to top ======
+  function initBackToTop() {
+    const btn = document.getElementById("back-to-top");
+    if (!btn) return;
+    window.addEventListener("scroll", () => {
+      if (window.scrollY > 400) {
+        btn.classList.remove("opacity-0", "translate-y-4", "pointer-events-none");
+        btn.classList.add("opacity-100", "translate-y-0");
+      } else {
+        btn.classList.add("opacity-0", "translate-y-4", "pointer-events-none");
+        btn.classList.remove("opacity-100", "translate-y-0");
+      }
+    }, { passive: true });
+    btn.addEventListener("click", () => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }
+
+  // ====== 真实滚动进度条 ======
+  function initScrollProgress() {
+    const bar = document.getElementById("scroll-progress");
+    if (!bar) return;
+    function update() {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = docHeight > 0 ? scrollTop / docHeight : 0;
+      bar.style.transform = `scaleX(${progress})`;
+    }
+    window.addEventListener("scroll", update, { passive: true });
+    update();
+  }
+
+  // ====== View Transition 支持 ======
+  function onNavigation() {
+    initScrollReveal();
+    initBackToTop();
+    initScrollProgress();
+  }
+
+  document.addEventListener("DOMContentLoaded", onNavigation);
+  document.addEventListener("astro:page-load", onNavigation);
+</script>

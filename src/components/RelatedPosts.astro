@@ -1,0 +1,48 @@
+---
+import { getCollection } from "astro:content";
+
+interface Props {
+  currentSlug: string;
+  tags: string[];
+  category: string;
+}
+const { currentSlug, tags, category } = Astro.props;
+
+const allPosts = await getCollection("posts");
+const related = allPosts
+  .filter((p) => !p.data.draft && p.slug !== currentSlug)
+  .map((p) => {
+    let score = 0;
+    if (p.data.category === category) score += 3;
+    p.data.tags.forEach((t: string) => {
+      if (tags.includes(t)) score += 1;
+    });
+    return { ...p, score };
+  })
+  .filter((p) => p.score > 0)
+  .sort((a, b) => b.score - a.score)
+  .slice(0, 3);
+---
+
+{related.length > 0 && (
+  <div class="mt-16 pt-8 border-t border-border/50" data-animate>
+    <h3 class="text-lg font-semibold mb-6">相关推荐</h3>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {related.map((post) => (
+        <a
+          href={`/posts/${post.slug}`}
+          class="group block p-4 rounded-xl border border-border/50 bg-card/50 hover:border-primary/20 hover:shadow-md transition-all duration-300"
+        >
+          <div class="flex items-center gap-2 text-xs text-muted-foreground/60 mb-2">
+            <time>{post.data.date.toLocaleDateString("zh-CN")}</time>
+            <span class="text-primary/70">{post.data.category}</span>
+          </div>
+          <h4 class="text-sm font-medium group-hover:text-primary transition-colors duration-200 line-clamp-2 mb-1.5">
+            {post.data.title}
+          </h4>
+          <p class="text-xs text-muted-foreground/60 line-clamp-2">{post.data.description}</p>
+        </a>
+      ))}
+    </div>
+  </div>
+)}

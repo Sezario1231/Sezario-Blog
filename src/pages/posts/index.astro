@@ -1,0 +1,170 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import ArticleCard from "@/components/ArticleCard";
+import FilterBar from "@/components/FilterBar.astro";
+import Pagination from "@/components/Pagination.astro";
+import { getCollection } from "astro:content";
+
+const POSTS_PER_PAGE = 9;
+
+const allPosts = await getCollection("posts");
+const published = allPosts
+  .filter((post) => !post.data.draft)
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+const categories = [...new Set(published.map((p) => p.data.category))];
+const tags = [...new Set(published.flatMap((p) => p.data.tags))];
+
+const activeCategory = Astro.url.searchParams.get("category");
+const activeTag = Astro.url.searchParams.get("tag");
+const pageParam = Astro.url.searchParams.get("page");
+const currentPage = Math.max(1, parseInt(pageParam || "1", 10));
+
+let filteredPosts = published;
+if (activeCategory) {
+  filteredPosts = filteredPosts.filter((p) => p.data.category === activeCategory);
+}
+if (activeTag) {
+  filteredPosts = filteredPosts.filter((p) => p.data.tags.includes(activeTag));
+}
+
+const totalPages = Math.ceil(filteredPosts.length / POSTS_PER_PAGE);
+const paginatedPosts = filteredPosts.slice(
+  (currentPage - 1) * POSTS_PER_PAGE,
+  currentPage * POSTS_PER_PAGE
+);
+
+const filterParams = new URLSearchParams();
+if (activeCategory) filterParams.set("category", activeCategory);
+if (activeTag) filterParams.set("tag", activeTag);
+const baseUrl = filterParams.toString() ? `/posts?${filterParams.toString()}` : "/posts";
+---
+
+<BaseLayout title="文章 - Sezario." description="全部文章列表">
+  <section class="container max-w-6xl mx-auto px-5 md:px-8 py-16 md:py-24">
+    <div class="mb-10" data-animate>
+      <h1 class="text-4xl md:text-5xl font-bold tracking-tight mb-3">全部文章</h1>
+      <p class="text-muted-foreground max-w-xl">
+        技术、教程与深度实践笔记。
+      </p>
+    </div>
+
+    <div class="mb-10">
+      <FilterBar categories={categories} tags={tags} activeCategory={activeCategory ?? undefined} activeTag={activeTag ?? undefined} />
+    </div>
+
+    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {
+        paginatedPosts.length > 0 ? (
+          paginatedPosts.map((post, i) => (
+            <ArticleCard
+              slug={post.slug}
+              title={post.data.title}
+              date={post.data.date}
+              category={post.data.category}
+              description={post.data.description}
+              tags={post.data.tags}
+              style={{ animationDelay: `${i * 0.05}s` }}
+              data-animate=""
+            />
+          ))
+        ) : (
+          <div class="col-span-full text-center py-20 text-muted-foreground">
+            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-muted mb-3">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <p class="text-lg">没有找到匹配的文章。</p>
+            <a href="/posts" class="text-primary hover:underline text-sm mt-2 inline-block">查看全部</a>
+          </div>
+        )
+      }
+    </div>
+
+    <Pagination currentPage={currentPage} totalPages={totalPages} baseUrl={baseUrl} />
+
+    {/* 无限滚动加载指示器 */}
+    {currentPage < totalPages && (
+      <div id="infinite-scroll-sentinel" class="flex justify-center py-8">
+        <div class="flex items-center gap-2 text-sm text-muted-foreground/60">
+          <svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12a9 9 0 11-6.219-8.56"/>
+          </svg>
+          <span>加载中...</span>
+        </div>
+      </div>
+    )}
+  </section>
+</BaseLayout>
+
+<script>
+  // 无限滚动
+  function initInfiniteScroll() {
+    const sentinel = document.getElementById("infinite-scroll-sentinel");
+    if (!sentinel) return;
+
+    const grid = sentinel.closest("section")?.querySelector(".grid") as HTMLElement;
+    if (!grid) return;
+
+    let currentPage = new URLSearchParams(window.location.search).get("page") || "1";
+    let loading = false;
+    let hasMore = true;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !loading && hasMore) {
+          loadNextPage();
+        }
+      },
+      { rootMargin: "200px" }
+    );
+
+    observer.observe(sentinel);
+
+    async function loadNextPage() {
+      loading = true;
+      const nextPage = parseInt(currentPage) + 1;
+      const params = new URLSearchParams(window.location.search);
+      params.set("page", String(nextPage));
+
+      try {
+        const resp = await fetch(`/posts?${params.toString()}`);
+        const html = await resp.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+        const newCards = doc.querySelectorAll(".grid > [data-animate]");
+
+        if (newCards.length === 0) {
+          hasMore = false;
+          sentinel.innerHTML = '<p class="text-sm text-muted-foreground/40">— 没有更多了 —</p>';
+          observer.disconnect();
+          return;
+        }
+
+        newCards.forEach((card) => {
+          grid.appendChild(card);
+        });
+        currentPage = String(nextPage);
+
+        // 检查是否还有下一页
+        const totalPages = doc.querySelector("[data-total-pages]");
+        if (totalPages) {
+          const total = parseInt(totalPages.getAttribute("data-total-pages") || "0");
+          if (nextPage >= total) {
+            hasMore = false;
+            sentinel.innerHTML = '<p class="text-sm text-muted-foreground/40">— 没有更多了 —</p>';
+            observer.disconnect();
+          }
+        }
+      } catch {
+        hasMore = false;
+        sentinel.innerHTML = '<p class="text-sm text-muted-foreground/40">加载失败，请刷新重试</p>';
+      }
+
+      loading = false;
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", initInfiniteScroll);
+</script>

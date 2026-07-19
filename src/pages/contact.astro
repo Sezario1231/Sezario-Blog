@@ -1,0 +1,31 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import ContactForm from "@/components/ContactForm";
+import EmailSubscribe from "@/components/EmailSubscribe.astro";
+import Guestbook from "@/components/Guestbook.astro";
+---
+
+<BaseLayout title="联系 - Sezario." description="与我取得联系。">
+  <section class="container max-w-xl mx-auto px-5 md:px-8 py-16 md:py-24">
+    <div class="mb-10 text-center" data-animate>
+      <h1 class="text-4xl md:text-5xl font-bold tracking-tight mb-3">联系</h1>
+      <p class="text-muted-foreground max-w-md mx-auto">
+        有项目想法、问题，或者只是想打个招呼？欢迎给我留言。
+      </p>
+    </div>
+
+    <div class="space-y-8">
+      <div class="glass-card rounded-2xl p-8" data-animate>
+        <ContactForm client:load />
+      </div>
+
+      <div data-animate>
+        <EmailSubscribe />
+      </div>
+
+      <div data-animate>
+        <Guestbook />
+      </div>
+    </div>
+  </section>
+</BaseLayout>

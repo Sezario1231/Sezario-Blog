@@ -1,0 +1,183 @@
+---
+---
+
+<div class="aurora-container fixed inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden="true">
+  <div class="aurora-blob aurora-1"></div>
+  <div class="aurora-blob aurora-2"></div>
+  <div class="aurora-blob aurora-3"></div>
+  <div class="aurora-blob aurora-4"></div>
+  <div class="aurora-overlay"></div>
+</div>
+
+<div class="light-pattern fixed inset-0 pointer-events-none z-0 dark:opacity-0" aria-hidden="true"
+  style="background-image:
+    radial-gradient(circle, hsl(30 50% 60%) 1px, transparent 1px),
+    linear-gradient(45deg, hsl(35 30% 90% / 0.25) 1px, transparent 1px);
+  background-size: 24px 24px, 48px 48px;">
+</div>
+<div class="light-warm-glow fixed inset-0 pointer-events-none z-0 dark:opacity-0" aria-hidden="true"
+  style="background:
+    radial-gradient(ellipse at 30% 15%, hsl(28 100% 75% / 0.18) 0%, transparent 50%),
+    radial-gradient(ellipse at 75% 85%, hsl(15 90% 65% / 0.14) 0%, transparent 45%),
+    radial-gradient(ellipse at 55% 50%, hsl(35 80% 60% / 0.06) 0%, transparent 40%);
+"></div>
+
+<div class="dark-stars fixed inset-0 pointer-events-none z-0 hidden dark:block" aria-hidden="true"></div>
+
+<style>
+  .aurora-container {
+    filter: blur(90px);
+    opacity: 0.4;
+  }
+  :global(.dark) .aurora-container {
+    opacity: 0.55;
+    filter: blur(70px);
+  }
+  :global(:root:not(.dark)) .aurora-container {
+    opacity: 0.45;
+    filter: blur(70px) saturate(1.4);
+  }
+  .aurora-blob {
+    position: absolute;
+    border-radius: 50%;
+  }
+  :global(.dark) .aurora-blob {
+    mix-blend-mode: screen;
+  }
+  :global(:root:not(.dark)) .aurora-blob {
+    mix-blend-mode: multiply;
+  }
+
+  /* ===== 白天暖色调 ===== */
+  :global(:root:not(.dark)) .aurora-1 {
+    background: linear-gradient(135deg, hsl(28 85% 65% / 0.5), hsl(15 75% 55% / 0.35));
+    width: 55vw; height: 55vh;
+  }
+  :global(:root:not(.dark)) .aurora-2 {
+    background: linear-gradient(225deg, hsl(35 80% 65% / 0.35), hsl(45 70% 60% / 0.25));
+    width: 45vw; height: 45vh;
+  }
+  :global(:root:not(.dark)) .aurora-3 {
+    background: linear-gradient(180deg, hsl(15 65% 55% / 0.3), hsl(28 70% 50% / 0.2));
+    width: 50vw; height: 50vh;
+  }
+  :global(:root:not(.dark)) .aurora-4 {
+    display: none;
+  }
+
+  /* ===== 夜间极光色调 ===== */
+  :global(.dark) .aurora-1 {
+    background: linear-gradient(135deg, hsl(160 75% 50% / 0.45), hsl(170 65% 40% / 0.3));
+    width: 65vw; height: 60vh;
+    top: -20%; left: -15%;
+    animation: aurora-drift-1 10s ease-in-out infinite alternate;
+  }
+  :global(.dark) .aurora-2 {
+    background: linear-gradient(225deg, hsl(270 70% 55% / 0.35), hsl(300 60% 50% / 0.25));
+    width: 55vw; height: 50vh;
+    top: 5%; right: -10%;
+    animation: aurora-drift-2 14s ease-in-out infinite alternate;
+  }
+  :global(.dark) .aurora-3 {
+    background: linear-gradient(180deg, hsl(160 70% 50% / 0.3), hsl(200 60% 45% / 0.2));
+    width: 50vw; height: 55vh;
+    bottom: -15%; left: 10%;
+    animation: aurora-drift-3 18s ease-in-out infinite alternate;
+  }
+  :global(.dark) .aurora-4 {
+    display: block;
+    background: linear-gradient(0deg, hsl(160 70% 45% / 0.25), hsl(180 80% 50% / 0.15));
+    width: 40vw; height: 70vh;
+    top: -10%; left: 30%;
+    animation: aurora-drift-4 16s ease-in-out infinite alternate;
+  }
+
+  /* default positions (daytime base) */
+  .aurora-1 {
+    width: 60vw; height: 60vh;
+    background: linear-gradient(135deg, hsl(28 80% 60% / 0.45), hsl(15 70% 50% / 0.3));
+    top: -15%; left: -10%;
+    animation: aurora-drift-1 12s ease-in-out infinite alternate;
+  }
+  .aurora-2 {
+    width: 50vw; height: 50vh;
+    background: linear-gradient(225deg, hsl(35 75% 60% / 0.3), hsl(45 65% 55% / 0.2));
+    top: 10%; right: -15%;
+    animation: aurora-drift-2 15s ease-in-out infinite alternate;
+  }
+  .aurora-3 {
+    width: 45vw; height: 45vh;
+    background: linear-gradient(180deg, hsl(15 60% 50% / 0.25), hsl(28 65% 48% / 0.18));
+    bottom: -10%; left: 20%;
+    animation: aurora-drift-3 18s ease-in-out infinite alternate;
+  }
+  .aurora-4 {
+    display: none;
+  }
+  .aurora-overlay {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 20%, hsl(var(--background)) 65%);
+  }
+  :global(.dark) .aurora-overlay {
+    background: radial-gradient(ellipse at center, transparent 25%, hsl(var(--background)) 70%);
+  }
+
+  /* ---- 动画 ---- */
+  @keyframes aurora-drift-1 {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(8vw, 5vh) scale(1.15); }
+  }
+  @keyframes aurora-drift-2 {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(-6vw, -8vh) scale(1.1); }
+  }
+  @keyframes aurora-drift-3 {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(5vw, -4vh) scale(1.2); }
+  }
+  @keyframes aurora-drift-4 {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(-4vw, 6vh) scale(1.15); }
+  }
+
+  /* ---- 白天暖光脉冲 ---- */
+  .light-warm-glow {
+    animation: warm-pulse 6s ease-in-out infinite alternate;
+  }
+  @keyframes warm-pulse {
+    0% { opacity: 0.7; }
+    100% { opacity: 1; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .aurora-blob { animation: none !important; }
+    .light-warm-glow { animation: none !important; }
+    .dark-stars { animation: none !important; opacity: 0.7; }
+  }
+
+  /* ---- 夜间星星 ---- */
+  .dark-stars {
+    background-image:
+      radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.6) 0%, transparent 100%),
+      radial-gradient(1px 1px at 25% 45%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 40% 15%, rgba(255,255,255,0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 60% 35%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 75% 55%, rgba(255,255,255,0.5) 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 90% 25%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 15% 70%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 35% 80%, rgba(255,255,255,0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 55% 65%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 80% 75%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 70% 10%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 50% 90%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 5% 50%, rgba(255,255,255,0.35) 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 95% 60%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 45% 40%, rgba(255,255,255,0.25) 0%, transparent 100%);
+    animation: twinkle 4s ease-in-out infinite alternate;
+  }
+  @keyframes twinkle {
+    0% { opacity: 0.5; }
+    100% { opacity: 1; }
+  }
+</style>

@@ -1,0 +1,39 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import Timeline from "@/components/Timeline.astro";
+import { getCollection } from "astro:content";
+
+const allPosts = await getCollection("posts");
+const publishedPosts = allPosts
+  .filter((post) => !post.data.draft)
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+const timelineItems = publishedPosts.map((post) => ({
+  date: post.data.date,
+  title: post.data.title,
+  slug: post.slug,
+  category: post.data.category,
+  description: post.data.description,
+}));
+---
+
+<BaseLayout title="归档 - Sezario." description="按时间浏览所有文章。">
+  <section class="container max-w-6xl mx-auto px-5 md:px-8 py-16 md:py-24">
+    <div class="mb-14" data-animate>
+      <h1 class="text-4xl md:text-5xl font-bold tracking-tight mb-3">归档</h1>
+        <p class="text-muted-foreground max-w-xl">
+        共 {publishedPosts.length} 篇文章，持续更新中。
+      </p>
+    </div>
+
+    {
+      timelineItems.length > 0 ? (
+        <Timeline items={timelineItems} />
+      ) : (
+        <div class="text-center py-20 text-muted-foreground">
+          <p class="text-lg">暂无文章。</p>
+        </div>
+      )
+    }
+  </section>
+</BaseLayout>

@@ -1,0 +1,116 @@
+---
+interface Props {
+  code: string;
+  lang?: string;
+  title?: string;
+}
+const { code, lang = "", title } = Astro.props;
+const lines = code.trim().split("\n");
+const shouldFold = lines.length > 15;
+---
+
+<div class="code-block group relative my-6 rounded-xl border border-border/60 bg-[#0d1117] overflow-hidden" data-animate>
+  {title && (
+    <div class="flex items-center gap-2 px-4 py-2.5 border-b border-border/40 bg-white/3">
+      <svg class="w-3.5 h-3.5 text-muted-foreground/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z"/>
+        <polyline points="14,2 14,8 20,8"/>
+      </svg>
+      <span class="text-xs text-muted-foreground/70 font-mono">{title}</span>
+    </div>
+  )}
+  <div class="flex items-center justify-between px-4 py-2 border-b border-border/30 bg-white/2">
+    <div class="flex items-center gap-2">
+      <div class="flex gap-1.5">
+        <span class="w-3 h-3 rounded-full bg-red-400/80"></span>
+        <span class="w-3 h-3 rounded-full bg-yellow-400/80"></span>
+        <span class="w-3 h-3 rounded-full bg-green-400/80"></span>
+      </div>
+      {lang && <span class="text-[10px] text-muted-foreground/50 font-mono uppercase ml-2">{lang}</span>}
+    </div>
+    <button
+      class="code-copy-btn flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs text-muted-foreground/60 hover:text-foreground hover:bg-white/8 transition-all duration-200 opacity-0 group-hover:opacity-100"
+      data-code={code.trim()}
+      aria-label="复制代码"
+    >
+      <svg class="copy-icon w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+        <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+      </svg>
+      <svg class="check-icon w-3.5 h-3.5 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="20,6 9,17 4,12"/>
+      </svg>
+      <span class="copy-text">复制</span>
+    </button>
+    {shouldFold && (
+      <button
+        class="code-fold-btn flex items-center gap-1 px-2.5 py-1 rounded-md text-xs text-muted-foreground/60 hover:text-foreground hover:bg-white/8 transition-all duration-200 opacity-0 group-hover:opacity-100"
+        aria-label="展开/折叠"
+      >
+        <svg class="w-3.5 h-3.5 fold-icon transition-transform duration-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="m6 9 6 6 6-6"/>
+        </svg>
+        <span class="fold-text">展开</span>
+      </button>
+    )}
+  </div>
+  <div class:list={["overflow-x-auto", shouldFold && "code-fold-content"]}>
+    <table class="w-full border-collapse">
+      <tbody>
+        {lines.map((line, i) => (
+          <tr class="code-line hover:bg-white/3 transition-colors duration-100">
+            <td class="select-none text-right pr-4 pl-4 py-0 text-xs text-muted-foreground/30 font-mono w-[1%] whitespace-nowrap border-r border-border/20">{i + 1}</td>
+            <td class="px-4 py-0 text-sm font-mono leading-6 text-[#e6edf3] whitespace-pre">{line}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll(".code-copy-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const code = (btn as HTMLElement).dataset.code || "";
+      try {
+        await navigator.clipboard.writeText(code);
+        const copyIcon = btn.querySelector(".copy-icon") as HTMLElement;
+        const checkIcon = btn.querySelector(".check-icon") as HTMLElement;
+        const copyText = btn.querySelector(".copy-text") as HTMLElement;
+        copyIcon?.classList.add("hidden");
+        checkIcon?.classList.remove("hidden");
+        if (copyText) copyText.textContent = "已复制";
+        btn.classList.add("text-green-400");
+        setTimeout(() => {
+          copyIcon?.classList.remove("hidden");
+          checkIcon?.classList.add("hidden");
+          if (copyText) copyText.textContent = "复制";
+          btn.classList.remove("text-green-400");
+        }, 2000);
+      } catch {
+        const textarea = document.createElement("textarea");
+        textarea.value = code;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
+    });
+  });
+
+  // 代码折叠
+  document.querySelectorAll(".code-fold-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const block = btn.closest(".code-block");
+      const content = block?.querySelector(".code-fold-content");
+      const text = btn.querySelector(".fold-text") as HTMLElement;
+      const icon = btn.querySelector(".fold-icon") as HTMLElement;
+      if (!content) return;
+
+      content.classList.toggle("expanded");
+      const isExpanded = content.classList.contains("expanded");
+      if (text) text.textContent = isExpanded ? "折叠" : "展开";
+      if (icon) icon.style.transform = isExpanded ? "rotate(180deg)" : "";
+    });
+  });
+</script>

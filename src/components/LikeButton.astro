@@ -1,0 +1,73 @@
+---
+interface Props {
+  slug: string;
+}
+const { slug } = Astro.props;
+---
+
+<button
+  class="like-btn group relative flex items-center gap-2 px-4 py-2 rounded-xl border border-border/40 bg-card/50 hover:border-primary/20 hover:bg-primary/5 transition-all duration-300 active:scale-95"
+  data-slug={slug}
+  aria-label="点赞"
+>
+  <svg class="w-5 h-5 text-muted-foreground/60 group-hover:text-red-400 transition-all duration-300 like-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+  </svg>
+  <span class="text-sm text-muted-foreground/60 group-hover:text-foreground transition-all duration-300 like-count">0</span>
+  <div class="like-particles absolute inset-0 pointer-events-none overflow-hidden rounded-xl"></div>
+</button>
+
+<script>
+  function initLikeButtons() {
+    document.querySelectorAll<HTMLElement>(".like-btn").forEach((btn) => {
+      const slug = btn.dataset.slug || "";
+      const storageKey = `likes_${slug}`;
+      const countEl = btn.querySelector(".like-count") as HTMLElement;
+      const iconEl = btn.querySelector(".like-icon") as HTMLElement;
+      let count = parseInt(localStorage.getItem(storageKey) || "0", 10);
+      if (countEl) countEl.textContent = String(count);
+
+      btn.addEventListener("click", () => {
+        count++;
+        localStorage.setItem(storageKey, String(count));
+        if (countEl) {
+          countEl.textContent = String(count);
+          countEl.style.transform = "scale(1.3)";
+          setTimeout(() => { countEl.style.transform = ""; }, 200);
+        }
+        if (iconEl) {
+          iconEl.style.fill = "rgb(244 63 94)";
+          iconEl.style.stroke = "rgb(244 63 94)";
+          iconEl.style.transform = "scale(1.2)";
+          setTimeout(() => { iconEl.style.transform = ""; }, 300);
+        }
+        createParticles(btn);
+      });
+    });
+  }
+
+  function createParticles(btn: HTMLElement) {
+    const container = btn.querySelector(".like-particles");
+    if (!container) return;
+    for (let i = 0; i < 8; i++) {
+      const p = document.createElement("span");
+      p.className = "absolute w-1.5 h-1.5 rounded-full";
+      p.style.background = ["#f43f5e", "#fb923c", "#fbbf24", "#a78bfa", "#34d399", "#60a5fa"][i % 6];
+      p.style.left = "50%";
+      p.style.top = "50%";
+      p.style.transform = "translate(-50%, -50%)";
+      p.style.transition = "all 0.5s cubic-bezier(0.22, 1, 0.36, 1)";
+      container.appendChild(p);
+      const angle = (i / 8) * Math.PI * 2;
+      const dist = 18 + Math.random() * 14;
+      requestAnimationFrame(() => {
+        p.style.transform = `translate(calc(-50% + ${Math.cos(angle) * dist}px), calc(-50% + ${Math.sin(angle) * dist}px))`;
+        p.style.opacity = "0";
+      });
+      setTimeout(() => p.remove(), 600);
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", initLikeButtons);
+  document.addEventListener("astro:page-load", initLikeButtons);
+</script>

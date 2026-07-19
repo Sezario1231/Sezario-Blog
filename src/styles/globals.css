@@ -1,0 +1,567 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 35 25% 97%;
+    --foreground: 30 15% 12%;
+    --card: 35 20% 99%;
+    --card-foreground: 30 15% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 30 15% 12%;
+    --primary: 28 80% 52%;
+    --primary-foreground: 35 30% 98%;
+    --secondary: 35 20% 94%;
+    --secondary-foreground: 30 12% 35%;
+    --muted: 35 15% 94%;
+    --muted-foreground: 30 10% 46%;
+    --accent: 35 20% 94%;
+    --accent-foreground: 30 12% 35%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 30 15% 90%;
+    --input: 30 15% 90%;
+    --ring: 28 80% 52%;
+    --radius: 0.75rem;
+    --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+    --brand-glow: 28 80% 52%;
+    --card-shadow: 0 1px 2px rgba(120,60,20,0.04), 0 4px 16px rgba(120,60,20,0.03);
+    --card-shadow-hover: 0 8px 24px -4px rgba(200,100,40,0.1), 0 2px 8px rgba(120,60,20,0.05);
+  }
+
+  .dark {
+    --background: 230 20% 5%;
+    --foreground: 210 30% 96%;
+    --card: 230 18% 8%;
+    --card-foreground: 210 30% 96%;
+    --popover: 230 18% 8%;
+    --popover-foreground: 210 30% 96%;
+    --primary: 160 65% 55%;
+    --primary-foreground: 230 20% 5%;
+    --secondary: 230 20% 13%;
+    --secondary-foreground: 210 25% 80%;
+    --muted: 230 20% 13%;
+    --muted-foreground: 220 15% 60%;
+    --accent: 230 20% 13%;
+    --accent-foreground: 210 25% 80%;
+    --destructive: 0 55% 45%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 230 20% 14%;
+    --input: 230 20% 14%;
+    --ring: 160 65% 55%;
+    --brand-glow: 160 65% 55%;
+    --card-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+    --card-shadow-hover: 0 12px 40px -8px rgba(50,200,160,0.15), 0 2px 6px rgba(0,0,0,0.25);
+  }
+
+  /* 深夜蓝主题 */
+  .dark.theme-deepblue {
+    --background: 220 30% 6%;
+    --foreground: 210 40% 96%;
+    --card: 220 28% 9%;
+    --card-foreground: 210 40% 96%;
+    --popover: 220 28% 9%;
+    --popover-foreground: 210 40% 96%;
+    --primary: 210 80% 60%;
+    --primary-foreground: 220 30% 6%;
+    --secondary: 220 25% 14%;
+    --secondary-foreground: 210 30% 80%;
+    --muted: 220 25% 14%;
+    --muted-foreground: 215 20% 55%;
+    --border: 220 25% 15%;
+    --input: 220 25% 15%;
+    --ring: 210 80% 60%;
+    --brand-glow: 210 80% 60%;
+    --card-shadow: 0 1px 3px rgba(0,20,60,0.4), 0 1px 2px rgba(0,0,0,0.3);
+    --card-shadow-hover: 0 12px 40px -8px rgba(40,100,200,0.2), 0 2px 6px rgba(0,0,0,0.3);
+  }
+
+  /* 护眼绿主题 */
+  .dark.theme-eyegreen {
+    --background: 150 15% 6%;
+    --foreground: 140 20% 94%;
+    --card: 150 12% 9%;
+    --card-foreground: 140 20% 94%;
+    --popover: 150 12% 9%;
+    --popover-foreground: 140 20% 94%;
+    --primary: 150 60% 50%;
+    --primary-foreground: 150 15% 6%;
+    --secondary: 150 15% 13%;
+    --secondary-foreground: 140 15% 75%;
+    --muted: 150 15% 13%;
+    --muted-foreground: 150 10% 55%;
+    --border: 150 15% 14%;
+    --input: 150 15% 14%;
+    --ring: 150 60% 50%;
+    --brand-glow: 150 60% 50%;
+    --card-shadow: 0 1px 3px rgba(0,30,10,0.4), 0 1px 2px rgba(0,0,0,0.3);
+    --card-shadow-hover: 0 12px 40px -8px rgba(40,180,100,0.15), 0 2px 6px rgba(0,0,0,0.3);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  .disable-transitions,
+  .disable-transitions *,
+  .disable-transitions *::before,
+  .disable-transitions *::after {
+    transition: none !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  :root:not(.dark) body {
+    background-color: hsl(35 25% 97%);
+    background-image:
+      radial-gradient(ellipse at 15% 0%, hsl(28 85% 65% / 0.15) 0%, transparent 50%),
+      radial-gradient(ellipse at 85% 15%, hsl(35 80% 70% / 0.12) 0%, transparent 45%),
+      radial-gradient(ellipse at 50% 100%, hsl(15 70% 60% / 0.1) 0%, transparent 45%),
+      radial-gradient(ellipse at 20% 60%, hsl(160 40% 55% / 0.05) 0%, transparent 40%);
+  }
+  .dark body {
+    background-color: hsl(230 20% 5%);
+    background-image:
+      radial-gradient(ellipse at 20% 0%, hsl(160 80% 40% / 0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 20%, hsl(270 70% 50% / 0.05) 0%, transparent 45%),
+      radial-gradient(ellipse at 50% 100%, hsl(160 60% 45% / 0.03) 0%, transparent 40%);
+  }
+
+  ::selection {
+    background: hsl(28 80% 52% / 0.15);
+    color: hsl(var(--foreground));
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.2);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.35);
+  }
+}
+
+@layer components {
+  .glass {
+    background: hsl(var(--background) / 0.7);
+    backdrop-filter: blur(24px) saturate(1.3);
+    -webkit-backdrop-filter: blur(24px) saturate(1.3);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  :root:not(.dark) .glass {
+    background: hsl(35 20% 98% / 0.8);
+    border: 1px solid rgba(120, 60, 20, 0.06);
+    box-shadow: 0 1px 3px rgba(120,60,20,0.04);
+  }
+  .dark .glass {
+    background: hsl(var(--background) / 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .glass-card {
+    background: hsl(var(--card) / 0.6);
+    backdrop-filter: blur(30px) saturate(1.4);
+    -webkit-backdrop-filter: blur(30px) saturate(1.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  :root:not(.dark) .glass-card {
+    background: hsl(35 20% 99% / 0.8);
+    border: 1px solid rgba(120, 60, 20, 0.06);
+    box-shadow: 0 2px 8px rgba(120,60,20,0.04), 0 8px 24px rgba(120,60,20,0.03);
+  }
+  .dark .glass-card {
+    background: hsl(var(--card) / 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+  }
+
+  .gradient-text {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(28 80% 52%) 0%, hsl(15 70% 50%) 50%, hsl(28 65% 45%) 100%);
+    background-size: 200% 200%;
+    animation: gradient-shift 5s ease-in-out infinite;
+  }
+
+  @keyframes gradient-shift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  .shine-top {
+    position: relative;
+    overflow: hidden;
+  }
+  .shine-top::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, hsl(28 80% 52% / 0.5), transparent);
+    transition: left 0.6s ease;
+    z-index: 1;
+  }
+  .shine-top:hover::before {
+    left: 100%;
+  }
+
+  :root:not(.dark) .shine-top::before {
+    background: linear-gradient(90deg, transparent, hsl(28 80% 52% / 0.35), transparent);
+  }
+
+  .glow-border {
+    position: relative;
+  }
+  .glow-border::after {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, hsl(28 80% 52% / 0.25), transparent 50%, hsl(15 70% 50% / 0.15));
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    -webkit-mask-composite: xor;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+  .glow-border:hover::after {
+    opacity: 1;
+  }
+
+  .nav-underline {
+    position: relative;
+  }
+  .nav-underline::after {
+    content: "";
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: hsl(var(--primary));
+    border-radius: 1px;
+    transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  :root:not(.dark) .nav-underline::after {
+    box-shadow: 0 0 6px hsl(28 80% 52% / 0.25);
+  }
+  .dark .nav-underline::after {
+    box-shadow: 0 0 8px hsl(160 65% 55% / 0.35);
+  }
+  .nav-underline:hover::after {
+    width: 100%;
+    left: 0;
+  }
+
+  .prose {
+    @apply text-foreground;
+  }
+  .prose :where(p):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+    @apply leading-[1.8];
+  }
+  .prose :where(h1, h2, h3, h4):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+    @apply text-foreground font-semibold tracking-tight;
+  }
+  .prose :where(a):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+    @apply text-primary no-underline hover:underline;
+  }
+  .prose :where(blockquote):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+    @apply border-l-primary text-muted-foreground italic bg-primary/5 rounded-r-lg py-1 pr-4;
+  }
+  .prose :where(code):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+    @apply text-primary font-mono text-sm bg-primary/10 border border-primary/10 px-1.5 py-0.5 rounded;
+  }
+  .prose :where(pre):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+    @apply bg-card border border-border rounded-xl p-4 overflow-x-auto;
+  }
+  :root:not(.dark) .prose :where(pre):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+    box-shadow: 0 1px 3px rgba(120,60,20,0.05), 0 4px 12px rgba(120,60,20,0.03);
+  }
+  .prose :where(ul):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+    @apply list-disc;
+  }
+  .prose :where(li):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+    @apply text-muted-foreground;
+  }
+  .prose :where(strong):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+    @apply text-foreground font-semibold;
+  }
+  .prose :where(hr):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+    @apply border-border;
+  }
+}
+
+@layer utilities {
+  /* ====== 滚动揭示动画 ====== */
+  @keyframes fade-in-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes scale-in {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  /* 新版滚动揭示 — 由 JS 添加 .revealed 类 */
+  [data-animate] {
+    opacity: 0;
+    transform: translateY(16px);
+    transition:
+      opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  [data-animate].revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* 无 JS 降级 */
+  @media (scripting: none) {
+    [data-animate] {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 20px hsl(28 80% 52% / 0.12); }
+    50% { box-shadow: 0 0 40px hsl(28 80% 52% / 0.25); }
+  }
+
+  @keyframes text-glow {
+    0%, 100% { text-shadow: 0 0 10px hsl(28 80% 52% / 0.2); }
+    50% { text-shadow: 0 0 20px hsl(28 80% 52% / 0.4), 0 0 40px hsl(28 80% 52% / 0.15); }
+  }
+
+  /* 保留旧类名兼容 */
+  .animate-fade-in-up {
+    animation: fade-in-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+  .animate-fade-in {
+    animation: fade-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+  .animate-shimmer {
+    animation: shimmer 0.6s ease;
+  }
+  .animate-float {
+    animation: float 4s ease-in-out infinite;
+  }
+  .animate-pulse-glow {
+    animation: pulse-glow 3s ease-in-out infinite;
+  }
+
+  /* ====== View Transition 页面过渡 ====== */
+  @keyframes page-enter {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Hero 入场动画 — CSS class 控制，避免内联样式冲突 */
+  .hero-enter {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+                transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .hero-enter.active {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .disable-transitions .hero-enter {
+    transition: none !important;
+  }
+
+  ::view-transition-old(root) {
+    animation: fade-out 0.15s ease-in forwards;
+  }
+  ::view-transition-new(root) {
+    animation: page-enter 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  @keyframes fade-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-fade-in-up,
+    .animate-fade-in,
+    .animate-shimmer,
+    .animate-float,
+    .animate-pulse-glow,
+    .animate-text-glow {
+      animation: none !important;
+    }
+    [data-animate] {
+      opacity: 1 !important;
+      transform: none !important;
+      transition: none !important;
+    }
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+      animation: none !important;
+    }
+  }
+
+  :root:not(.dark) .animate-text-glow {
+    text-shadow: 0 0 8px hsl(28 80% 52% / 0.12);
+    animation: none;
+  }
+  .dark .animate-text-glow {
+    animation: text-glow 3s ease-in-out infinite;
+  }
+
+  /* ====== 霓虹发光 hover ====== */
+  .neon-glow {
+    transition: box-shadow 0.3s ease, text-shadow 0.3s ease;
+  }
+  .neon-glow:hover {
+    box-shadow: 0 0 12px hsl(var(--primary) / 0.35), 0 0 24px hsl(var(--primary) / 0.15);
+  }
+  .dark .neon-glow:hover {
+    box-shadow: 0 0 15px hsl(var(--primary) / 0.4), 0 0 30px hsl(var(--primary) / 0.2), 0 0 45px hsl(var(--primary) / 0.1);
+  }
+  .neon-text-glow:hover {
+    text-shadow: 0 0 8px hsl(var(--primary) / 0.5), 0 0 16px hsl(var(--primary) / 0.3);
+  }
+
+  /* ====== 代码折叠 ====== */
+  .code-fold-content {
+    max-height: 400px;
+    overflow: hidden;
+    position: relative;
+    transition: max-height 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .code-fold-content.expanded {
+    max-height: none;
+  }
+  .code-fold-content:not(.expanded)::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 80px;
+    background: linear-gradient(transparent, #0d1117);
+    pointer-events: none;
+  }
+  .code-fold-btn {
+    transition: all 0.2s;
+  }
+
+  /* ====== 骨架屏 shimmer ====== */
+  .skeleton-shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+  .skeleton-shimmer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent 0%, hsl(var(--foreground) / 0.04) 50%, transparent 100%);
+    animation: skeleton-shimmer 1.8s ease-in-out infinite;
+  }
+  .dark .skeleton-shimmer::after {
+    background: linear-gradient(90deg, transparent 0%, hsl(var(--foreground) / 0.06) 50%, transparent 100%);
+  }
+
+  @keyframes skeleton-shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  /* ====== 代码块样式 ====== */
+  .prose :where(pre):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+  }
+  .prose :where(code):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+    font-size: 0.875em;
+    font-weight: 500;
+  }
+  .prose :where(code):not(:where([class~="not-prose"], [class~="not-prose"] *))::before,
+  .prose :where(code):not(:where([class~="not-prose"], [class~="not-prose"] *))::after {
+    content: none !important;
+  }
+
+  /* ====== 文字选中样式 ====== */
+  ::selection {
+    background: hsl(28 80% 52% / 0.2);
+    color: hsl(var(--foreground));
+  }
+  .dark ::selection {
+    background: hsl(160 65% 55% / 0.25);
+  }
+
+  /* ====== 轻量化模式 ====== */
+  .lite-mode,
+  .lite-mode * {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+  }
+  .lite-mode canvas {
+    display: none !important;
+  }
+  .lite-mode [data-animate] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .lite-mode .hero-enter {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* ====== TOC 进度高亮 ====== */
+  .toc-link.active {
+    color: hsl(var(--primary)) !important;
+    font-weight: 600;
+  }
+  .toc-link {
+    transition: color 0.2s, font-weight 0.2s;
+  }
+}

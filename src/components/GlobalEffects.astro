@@ -1,0 +1,145 @@
+---
+---
+<!-- 快捷键提示 -->
+<div id="shortcut-toast" class="fixed bottom-20 left-1/2 -translate-x-1/2 z-[150] px-4 py-2.5 rounded-xl bg-card/90 border border-border/50 backdrop-blur-md shadow-xl text-sm text-foreground opacity-0 translate-y-2 pointer-events-none transition-all duration-300">
+  <span id="shortcut-toast-text"></span>
+</div>
+
+<!-- 图片灯箱 -->
+<div id="lightbox" class="fixed inset-0 z-[200] hidden bg-black/90 backdrop-blur-sm flex items-center justify-center">
+  <button id="lightbox-close" class="absolute top-4 right-4 p-2 rounded-full text-white/70 hover:text-white hover:bg-white/10 transition-all" aria-label="关闭">
+    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+  </button>
+  <button id="lightbox-prev" class="absolute left-4 p-2 rounded-full text-white/70 hover:text-white hover:bg-white/10 transition-all" aria-label="上一张">
+    <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+  </button>
+  <button id="lightbox-next" class="absolute right-4 p-2 rounded-full text-white/70 hover:text-white hover:bg-white/10 transition-all" aria-label="下一张">
+    <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+  </button>
+  <img id="lightbox-img" class="max-w-[90vw] max-h-[85vh] object-contain rounded-lg shadow-2xl transition-transform duration-300" src="" alt="" />
+  <p id="lightbox-caption" class="absolute bottom-4 left-1/2 -translate-x-1/2 text-sm text-white/70"></p>
+</div>
+
+<script>
+  // ====== 快捷键系统 ======
+  function showToast(text: string) {
+    const toast = document.getElementById("shortcut-toast");
+    const toastText = document.getElementById("shortcut-toast-text");
+    if (!toast || !toastText) return;
+    toastText.textContent = text;
+    toast.classList.remove("opacity-0", "translate-y-2");
+    toast.classList.add("opacity-100", "translate-y-0");
+    setTimeout(() => {
+      toast.classList.add("opacity-0", "translate-y-2");
+      toast.classList.remove("opacity-100", "translate-y-0");
+    }, 1500);
+  }
+
+  document.addEventListener("keydown", (e) => {
+    // Ctrl+S → 收藏当前页
+    if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+      e.preventDefault();
+      const url = window.location.href;
+      const title = document.title;
+      try {
+        const bookmarks = JSON.parse(localStorage.getItem("bookmarks") || "[]");
+        const exists = bookmarks.some((b: any) => b.url === url);
+        if (!exists) {
+          bookmarks.push({ url, title, date: new Date().toISOString() });
+          localStorage.setItem("bookmarks", JSON.stringify(bookmarks));
+          showToast("已收藏此页面");
+        } else {
+          showToast("已在收藏中");
+        }
+      } catch {}
+    }
+
+    // Ctrl+\ → 切换主题
+    if ((e.ctrlKey || e.metaKey) && e.key === "\\") {
+      e.preventDefault();
+      const toggleBtn = document.querySelector("[aria-label='切换主题']") as HTMLButtonElement;
+      if (toggleBtn) toggleBtn.click();
+      showToast("切换主题");
+    }
+
+    // E → 编辑（如果有编辑链接）
+    if (e.key === "e" && !e.ctrlKey && !e.metaKey && !isTyping()) {
+      const editLink = document.querySelector("[data-edit-url]") as HTMLAnchorElement;
+      if (editLink) {
+        window.open(editLink.dataset.editUrl, "_blank");
+      }
+    }
+  });
+
+  function isTyping() {
+    const el = document.activeElement;
+    return el?.tagName === "INPUT" || el?.tagName === "TEXTAREA" || (el as HTMLElement)?.isContentEditable;
+  }
+
+  // ====== 图片灯箱 ======
+  let lightboxImages: HTMLImageElement[] = [];
+  let lightboxIndex = 0;
+
+  function openLightbox(img: HTMLImageElement) {
+    const lightbox = document.getElementById("lightbox");
+    const lightboxImg = document.getElementById("lightbox-img") as HTMLImageElement;
+    const caption = document.getElementById("lightbox-caption");
+    if (!lightbox || !lightboxImg) return;
+
+    // 收集页面上所有可点击的图片
+    lightboxImages = Array.from(document.querySelectorAll(".prose img, .article-content img")) as HTMLImageElement[];
+    lightboxIndex = lightboxImages.indexOf(img);
+
+    lightboxImg.src = img.src;
+    lightboxImg.alt = img.alt;
+    if (caption) caption.textContent = img.alt || "";
+    lightbox.classList.remove("hidden");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeLightbox() {
+    const lightbox = document.getElementById("lightbox");
+    if (lightbox) {
+      lightbox.classList.add("hidden");
+      document.body.style.overflow = "";
+    }
+  }
+
+  function navigateLightbox(dir: number) {
+    if (lightboxImages.length === 0) return;
+    lightboxIndex = (lightboxIndex + dir + lightboxImages.length) % lightboxImages.length;
+    const img = lightboxImages[lightboxIndex];
+    const lightboxImg = document.getElementById("lightbox-img") as HTMLImageElement;
+    const caption = document.getElementById("lightbox-caption");
+    if (lightboxImg) {
+      lightboxImg.src = img.src;
+      lightboxImg.alt = img.alt;
+    }
+    if (caption) caption.textContent = img.alt || "";
+  }
+
+  function initLightbox() {
+    document.querySelectorAll(".prose img, .article-content img").forEach((img) => {
+      const image = img as HTMLImageElement;
+      image.style.cursor = "zoom-in";
+      image.addEventListener("click", () => openLightbox(image));
+    });
+  }
+
+  document.getElementById("lightbox-close")?.addEventListener("click", closeLightbox);
+  document.getElementById("lightbox-prev")?.addEventListener("click", () => navigateLightbox(-1));
+  document.getElementById("lightbox-next")?.addEventListener("click", () => navigateLightbox(1));
+  document.getElementById("lightbox")?.addEventListener("click", (e) => {
+    if (e.target === e.currentTarget) closeLightbox();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (document.getElementById("lightbox")?.classList.contains("hidden")) return;
+    if (e.key === "Escape") closeLightbox();
+    if (e.key === "ArrowLeft") navigateLightbox(-1);
+    if (e.key === "ArrowRight") navigateLightbox(1);
+  });
+
+  document.addEventListener("DOMContentLoaded", initLightbox);
+  document.addEventListener("astro:page-load", initLightbox);
+</script>

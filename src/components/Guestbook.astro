@@ -1,0 +1,79 @@
+---
+---
+<div class="guestbook" data-animate>
+  <h3 class="text-lg font-semibold mb-4">留言墙</h3>
+  <form id="guestbook-form" class="flex gap-2 mb-6">
+    <input
+      type="text"
+      id="guestbook-name"
+      placeholder="你的名字"
+      maxlength="20"
+      class="w-28 px-3 py-2 rounded-xl bg-muted/50 border border-border/50 text-sm placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+    />
+    <input
+      type="text"
+      id="guestbook-msg"
+      placeholder="写点什么..."
+      maxlength="100"
+      required
+      class="flex-1 px-3.5 py-2 rounded-xl bg-muted/50 border border-border/50 text-sm placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+    />
+    <button
+      type="submit"
+      class="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-[0.97]"
+    >发送</button>
+  </form>
+  <div id="guestbook-messages" class="space-y-3 max-h-80 overflow-y-auto pr-1"></div>
+</div>
+
+<script>
+  interface Message {
+    name: string;
+    text: string;
+    date: string;
+    color: string;
+  }
+
+  const colors = ["from-primary/20 to-orange-300/20", "from-emerald-400/20 to-teal-300/20", "from-violet-400/20 to-purple-300/20", "from-amber-400/20 to-yellow-300/20", "from-rose-400/20 to-pink-300/20"];
+
+  function getMessages(): Message[] {
+    try { return JSON.parse(localStorage.getItem("guestbook") || "[]"); } catch { return []; }
+  }
+
+  function renderMessages() {
+    const container = document.getElementById("guestbook-messages");
+    if (!container) return;
+    const msgs = getMessages().slice(-20).reverse();
+    if (msgs.length === 0) {
+      container.innerHTML = `<p class="text-center text-sm text-muted-foreground/50 py-4">还没有留言，来做第一个吧。</p>`;
+      return;
+    }
+    container.innerHTML = msgs.map((m, i) => `
+      <div class="flex items-start gap-3 p-3 rounded-xl bg-gradient-to-r ${colors[i % colors.length]} border border-border/30 animate-fade-in">
+        <div class="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">${m.name.charAt(0).toUpperCase()}</div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 mb-0.5">
+            <span class="text-sm font-medium">${m.name}</span>
+            <span class="text-[10px] text-muted-foreground/50">${new Date(m.date).toLocaleDateString("zh-CN")}</span>
+          </div>
+          <p class="text-sm text-muted-foreground/80 break-words">${m.text}</p>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  document.getElementById("guestbook-form")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const name = (document.getElementById("guestbook-name") as HTMLInputElement).value.trim() || "匿名";
+    const text = (document.getElementById("guestbook-msg") as HTMLInputElement).value.trim();
+    if (!text) return;
+    const msgs = getMessages();
+    msgs.push({ name, text, date: new Date().toISOString(), color: colors[msgs.length % colors.length] });
+    localStorage.setItem("guestbook", JSON.stringify(msgs));
+    (document.getElementById("guestbook-msg") as HTMLInputElement).value = "";
+    renderMessages();
+  });
+
+  document.addEventListener("DOMContentLoaded", renderMessages);
+  document.addEventListener("astro:page-load", renderMessages);
+</script>

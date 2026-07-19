@@ -1,0 +1,67 @@
+---
+interface Props {
+  name?: string;
+  avatarUrl?: string;
+}
+const { name = "Sezario", avatarUrl } = Astro.props;
+---
+
+<div class="avatar-3d-wrapper relative w-32 h-32 mx-auto mb-6" data-animate>
+  <div class="avatar-3d relative w-full h-full rounded-full" style="transform-style: preserve-3d; perspective: 800px;">
+    <div
+      class="avatar-face avatar-front absolute inset-0 rounded-full border-2 border-primary/30 shadow-xl shadow-primary/10 overflow-hidden"
+      style="backface-visibility: hidden;"
+    >
+      {avatarUrl ? (
+        <img src={avatarUrl} alt={name} class="w-full h-full object-cover" loading="lazy" />
+      ) : (
+        <div class="w-full h-full bg-gradient-to-br from-primary/20 to-orange-300/20 dark:from-primary/30 dark:to-emerald-400/20 flex items-center justify-center">
+          <span class="text-4xl font-bold text-primary">{name.charAt(0)}</span>
+        </div>
+      )}
+    </div>
+    <div
+      class="avatar-face avatar-back absolute inset-0 rounded-full border-2 border-primary/30 shadow-xl shadow-primary/10 overflow-hidden"
+      style="backface-visibility: hidden; transform: rotateY(180deg);"
+    >
+      <div class="w-full h-full bg-gradient-to-br from-orange-300/30 to-primary/20 dark:from-emerald-400/30 dark:to-primary/20 flex items-center justify-center">
+        <svg class="w-12 h-12 text-primary/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <!-- 光环 -->
+  <div class="absolute -inset-2 rounded-full bg-primary/8 dark:bg-primary/5 animate-pulse-glow pointer-events-none"></div>
+</div>
+
+<script>
+  function initAvatar3D() {
+    document.querySelectorAll<HTMLElement>(".avatar-3d").forEach((avatar) => {
+      let rotation = 0;
+      let raf: number;
+
+      avatar.addEventListener("mouseenter", () => {
+        function spin() {
+          rotation += 2;
+          avatar.style.transform = `rotateY(${rotation}deg)`;
+          raf = requestAnimationFrame(spin);
+        }
+        spin();
+      });
+
+      avatar.addEventListener("mouseleave", () => {
+        cancelAnimationFrame(raf);
+        rotation = 0;
+        avatar.style.transition = "transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)";
+        avatar.style.transform = "rotateY(0deg)";
+        setTimeout(() => {
+          avatar.style.transition = "";
+        }, 600);
+      });
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", initAvatar3D);
+  document.addEventListener("astro:page-load", initAvatar3D);
+</script>

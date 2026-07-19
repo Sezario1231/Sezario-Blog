@@ -1,0 +1,265 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+
+const allPosts = await getCollection("posts");
+const published = allPosts.filter((p) => !p.data.draft);
+const categories = [...new Set(published.map((p) => p.data.category))];
+const allTags = [...new Set(published.flatMap((p) => p.data.tags))];
+const totalWords = published.reduce((sum, p) => sum + (p.body?.split(/\s+/).length || 0), 0);
+---
+
+<BaseLayout title="后台管理 - Sezario." description="博客管理面板">
+  <section class="container max-w-5xl mx-auto px-5 md:px-8 py-16 md:py-24">
+    <div class="mb-10" data-animate>
+      <h1 class="text-3xl md:text-4xl font-bold tracking-tight mb-2">后台管理</h1>
+      <p class="text-sm text-muted-foreground/60">管理文章、查看数据、配置插件</p>
+    </div>
+
+    <!-- 数据看板 -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10" data-animate>
+      <div class="p-5 rounded-xl border border-border/40 bg-card/50">
+        <p class="text-xs text-muted-foreground/60 mb-1">文章总数</p>
+        <p class="text-2xl font-bold text-primary">{published.length}</p>
+      </div>
+      <div class="p-5 rounded-xl border border-border/40 bg-card/50">
+        <p class="text-xs text-muted-foreground/60 mb-1">总字数</p>
+        <p class="text-2xl font-bold text-primary">{totalWords.toLocaleString()}</p>
+      </div>
+      <div class="p-5 rounded-xl border border-border/40 bg-card/50">
+        <p class="text-xs text-muted-foreground/60 mb-1">分类数</p>
+        <p class="text-2xl font-bold text-primary">{categories.length}</p>
+      </div>
+      <div class="p-5 rounded-xl border border-border/40 bg-card/50">
+        <p class="text-xs text-muted-foreground/60 mb-1">标签数</p>
+        <p class="text-2xl font-bold text-primary">{allTags.length}</p>
+      </div>
+    </div>
+
+    <!-- 文章管理 -->
+    <div class="mb-10" data-animate>
+      <h2 class="text-lg font-semibold mb-4">文章管理</h2>
+      <div class="border border-border/40 rounded-xl overflow-hidden">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-muted/30 border-b border-border/40">
+              <th class="text-left px-4 py-3 font-medium text-muted-foreground/70">标题</th>
+              <th class="text-left px-4 py-3 font-medium text-muted-foreground/70 hidden sm:table-cell">分类</th>
+              <th class="text-left px-4 py-3 font-medium text-muted-foreground/70 hidden md:table-cell">日期</th>
+              <th class="text-right px-4 py-3 font-medium text-muted-foreground/70">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            {published.map((post) => (
+              <tr class="border-b border-border/30 hover:bg-muted/20 transition-colors">
+                <td class="px-4 py-3">
+                  <a href={`/posts/${post.slug}`} class="hover:text-primary transition-colors line-clamp-1">{post.data.title}</a>
+                </td>
+                <td class="px-4 py-3 hidden sm:table-cell">
+                  <span class="text-xs px-2 py-0.5 rounded-full bg-primary/8 text-primary/80">{post.data.category}</span>
+                </td>
+                <td class="px-4 py-3 text-xs text-muted-foreground/60 hidden md:table-cell">
+                  {post.data.date.toLocaleDateString("zh-CN")}
+                </td>
+                <td class="px-4 py-3 text-right">
+                  <a href={`/posts/${post.slug}`} class="text-xs text-muted-foreground/60 hover:text-primary transition-colors">查看</a>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 插件开关 -->
+    <div class="mb-10" data-animate>
+      <h2 class="text-lg font-semibold mb-4">插件管理</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="flex items-center justify-between p-4 rounded-xl border border-border/40 bg-card/50">
+          <div>
+            <p class="text-sm font-medium">粒子背景</p>
+            <p class="text-xs text-muted-foreground/60">首页浮动粒子效果</p>
+          </div>
+          <label class="plugin-toggle relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" class="sr-only peer" data-plugin="particles" checked />
+            <div class="w-10 h-5 bg-muted rounded-full peer peer-checked:bg-primary/60 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
+          </label>
+        </div>
+        <div class="flex items-center justify-between p-4 rounded-xl border border-border/40 bg-card/50">
+          <div>
+            <p class="text-sm font-medium">滚动揭示动画</p>
+            <p class="text-xs text-muted-foreground/60">元素入场淡入效果</p>
+          </div>
+          <label class="plugin-toggle relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" class="sr-only peer" data-plugin="scrollReveal" checked />
+            <div class="w-10 h-5 bg-muted rounded-full peer peer-checked:bg-primary/60 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
+          </label>
+        </div>
+        <div class="flex items-center justify-between p-4 rounded-xl border border-border/40 bg-card/50">
+          <div>
+            <p class="text-sm font-medium">宇宙结尾</p>
+            <p class="text-xs text-muted-foreground/60">滚动到底部星空动画</p>
+          </div>
+          <label class="plugin-toggle relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" class="sr-only peer" data-plugin="cosmicEnding" checked />
+            <div class="w-10 h-5 bg-muted rounded-full peer peer-checked:bg-primary/60 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
+          </label>
+        </div>
+        <div class="flex items-center justify-between p-4 rounded-xl border border-border/40 bg-card/50">
+          <div>
+            <p class="text-sm font-medium">图片灯箱</p>
+            <p class="text-xs text-muted-foreground/60">点击图片全屏预览</p>
+          </div>
+          <label class="plugin-toggle relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" class="sr-only peer" data-plugin="lightbox" checked />
+            <div class="w-10 h-5 bg-muted rounded-full peer peer-checked:bg-primary/60 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
+          </label>
+        </div>
+        <div class="flex items-center justify-between p-4 rounded-xl border border-border/40 bg-card/50">
+          <div>
+            <p class="text-sm font-medium">鼠标磁吸</p>
+            <p class="text-xs text-muted-foreground/60">按钮磁吸跟随效果</p>
+          </div>
+          <label class="plugin-toggle relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" class="sr-only peer" data-plugin="magneticButtons" checked />
+            <div class="w-10 h-5 bg-muted rounded-full peer peer-checked:bg-primary/60 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
+          </label>
+        </div>
+        <div class="flex items-center justify-between p-4 rounded-xl border border-border/40 bg-card/50">
+          <div>
+            <p class="text-sm font-medium">打字机特效</p>
+            <p class="text-xs text-muted-foreground/60">Hero 区文字乱序动画</p>
+          </div>
+          <label class="plugin-toggle relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" class="sr-only peer" data-plugin="textScramble" checked />
+            <div class="w-10 h-5 bg-muted rounded-full peer peer-checked:bg-primary/60 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
+          </label>
+        </div>
+        <div class="flex items-center justify-between p-4 rounded-xl border border-border/40 bg-card/50">
+          <div>
+            <p class="text-sm font-medium">3D 卡片倾斜</p>
+            <p class="text-xs text-muted-foreground/60">文章卡片鼠标跟随倾斜</p>
+          </div>
+          <label class="plugin-toggle relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" class="sr-only peer" data-plugin="cardTilt" checked />
+            <div class="w-10 h-5 bg-muted rounded-full peer peer-checked:bg-primary/60 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
+          </label>
+        </div>
+        <div class="flex items-center justify-between p-4 rounded-xl border border-primary/20 bg-primary/5">
+          <div>
+            <p class="text-sm font-medium text-primary">轻量化模式</p>
+            <p class="text-xs text-muted-foreground/60">关闭所有动效，提升性能</p>
+          </div>
+          <label class="plugin-toggle relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" class="sr-only peer" data-plugin="liteMode" />
+            <div class="w-10 h-5 bg-muted rounded-full peer peer-checked:bg-primary/60 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- 数据导出 -->
+    <div data-animate>
+      <h2 class="text-lg font-semibold mb-4">数据</h2>
+      <div class="flex gap-3">
+        <button
+          id="export-bookmarks"
+          class="px-4 py-2 rounded-xl border border-border/40 bg-card/50 text-sm hover:border-primary/20 transition-all"
+        >导出收藏</button>
+        <button
+          id="export-guestbook"
+          class="px-4 py-2 rounded-xl border border-border/40 bg-card/50 text-sm hover:border-primary/20 transition-all"
+        >导出留言</button>
+        <button
+          id="clear-data"
+          class="px-4 py-2 rounded-xl border border-red-500/20 bg-red-500/5 text-sm text-red-500 hover:bg-red-500/10 transition-all"
+        >清除所有本地数据</button>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  // 插件开关
+  document.querySelectorAll<HTMLInputElement>(".plugin-toggle input").forEach((toggle) => {
+    const plugin = toggle.dataset.plugin || "";
+    const stored = localStorage.getItem(`plugin_${plugin}`);
+    toggle.checked = stored !== "off";
+
+    toggle.addEventListener("change", () => {
+      localStorage.setItem(`plugin_${plugin}`, toggle.checked ? "on" : "off");
+
+      if (plugin === "liteMode") {
+        document.documentElement.classList.toggle("lite-mode", toggle.checked);
+        // 联动关闭所有其他插件
+        if (toggle.checked) {
+          document.querySelectorAll<HTMLInputElement>(".plugin-toggle input").forEach((t) => {
+            if (t.dataset.plugin !== "liteMode") {
+              t.checked = false;
+              localStorage.setItem(`plugin_${t.dataset.plugin}`, "off");
+            }
+          });
+        }
+      }
+      if (plugin === "particles") {
+        document.querySelectorAll("canvas").forEach((c) => (c as HTMLElement).style.display = toggle.checked ? "" : "none");
+      }
+      if (plugin === "scrollReveal") {
+        document.querySelectorAll("[data-animate]").forEach((el) => {
+          (el as HTMLElement).style.animationPlayState = toggle.checked ? "running" : "paused";
+        });
+      }
+      if (plugin === "cosmicEnding") {
+        const el = document.getElementById("cosmic-ending");
+        if (el) el.style.display = toggle.checked ? "" : "none";
+      }
+      if (plugin === "magneticButtons") {
+        document.documentElement.classList.toggle("no-magnetic", !toggle.checked);
+      }
+      if (plugin === "textScramble") {
+        document.documentElement.classList.toggle("no-scramble", !toggle.checked);
+      }
+      if (plugin === "cardTilt") {
+        document.documentElement.classList.toggle("no-tilt", !toggle.checked);
+      }
+    });
+  });
+
+  // 初始化 lite-mode
+  if (localStorage.getItem("plugin_liteMode") === "on") {
+    document.documentElement.classList.add("lite-mode");
+  }
+
+  // 导出收藏
+  document.getElementById("export-bookmarks")?.addEventListener("click", () => {
+    const data = localStorage.getItem("bookmarks") || "[]";
+    downloadJSON(JSON.parse(data), "bookmarks.json");
+  });
+
+  // 导出留言
+  document.getElementById("export-guestbook")?.addEventListener("click", () => {
+    const data = localStorage.getItem("guestbook") || "[]";
+    downloadJSON(JSON.parse(data), "guestbook.json");
+  });
+
+  // 清除数据
+  document.getElementById("clear-data")?.addEventListener("click", () => {
+    if (confirm("确定要清除所有本地数据吗？此操作不可恢复。")) {
+      localStorage.removeItem("bookmarks");
+      localStorage.removeItem("guestbook");
+      localStorage.removeItem("subscribers");
+      localStorage.removeItem("theme");
+      alert("已清除");
+    }
+  });
+
+  function downloadJSON(data: any, filename: string) {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+</script>

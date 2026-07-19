@@ -1,0 +1,125 @@
+---
+---
+<div id="music-player" class="fixed bottom-20 left-6 z-50 hidden">
+  <div class="music-mini glass-card rounded-2xl p-3 w-48 border border-border/40 shadow-xl cursor-pointer" id="music-toggle">
+    <div class="flex items-center gap-2.5">
+      <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-primary/20 to-orange-300/20 dark:from-primary/30 dark:to-emerald-400/20 flex items-center justify-center shrink-0 music-disc">
+        <svg class="w-4 h-4 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+        </svg>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-xs font-medium truncate" id="music-title">未播放</p>
+        <p class="text-[10px] text-muted-foreground/50 truncate" id="music-artist">点击播放</p>
+      </div>
+      <button class="shrink-0 w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/5 transition-colors" id="music-play-btn">
+        <svg class="w-3.5 h-3.5 text-foreground" viewBox="0 0 24 24" fill="currentColor" id="play-icon">
+          <polygon points="5,3 19,12 5,21"/>
+        </svg>
+      </button>
+    </div>
+    <!-- 进度条 -->
+    <div class="mt-2 h-1 rounded-full bg-muted/30 overflow-hidden">
+      <div class="h-full bg-primary/60 rounded-full transition-all duration-300" id="music-progress" style="width: 0%"></div>
+    </div>
+  </div>
+
+  <!-- 展开面板 -->
+  <div class="music-expanded glass-card rounded-2xl p-4 w-64 border border-border/40 shadow-xl hidden mt-2" id="music-panel">
+    <p class="text-xs font-semibold mb-2">播放列表</p>
+    <div class="space-y-1.5" id="music-playlist"></div>
+    <div class="flex items-center gap-2 mt-3 pt-3 border-t border-border/30">
+      <input type="range" min="0" max="100" value="70" class="flex-1 h-1 accent-primary" id="music-volume" />
+      <svg class="w-3.5 h-3.5 text-muted-foreground/50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polygon points="11,5 6,9 2,9 2,15 6,15 11,19"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<script>
+  const playlist = [
+    { title: "Ambient Study", artist: "Lofi Girl", url: "" },
+    { title: "Midnight coding", artist: "Chill Beats", url: "" },
+    { title: "Rainy afternoon", artist: "Jazz Hop", url: "" },
+  ];
+
+  function initMusicPlayer() {
+    const player = document.getElementById("music-player");
+    const toggle = document.getElementById("music-toggle");
+    const panel = document.getElementById("music-panel");
+    const playBtn = document.getElementById("music-play-btn");
+    const titleEl = document.getElementById("music-title");
+    const artistEl = document.getElementById("music-artist");
+    const playlistEl = document.getElementById("music-playlist");
+
+    if (!player) return;
+    player.classList.remove("hidden");
+
+    let currentTrack = 0;
+    let playing = false;
+
+    // 渲染播放列表
+    if (playlistEl) {
+      playlistEl.innerHTML = playlist.map((t, i) => `
+        <div class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-muted/30 cursor-pointer transition-colors music-track" data-index="${i}">
+          <span class="text-[10px] text-muted-foreground/40 w-3">${i + 1}</span>
+          <div class="flex-1 min-w-0">
+            <p class="text-xs truncate">${t.title}</p>
+            <p class="text-[10px] text-muted-foreground/50 truncate">${t.artist}</p>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function selectTrack(index: number) {
+      currentTrack = index;
+      const track = playlist[index];
+      if (titleEl) titleEl.textContent = track.title;
+      if (artistEl) artistEl.textContent = track.artist;
+    }
+
+    selectTrack(0);
+
+    toggle?.addEventListener("click", () => {
+      panel?.classList.toggle("hidden");
+    });
+
+    playBtn?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      playing = !playing;
+      const icon = document.getElementById("play-icon");
+      if (icon) {
+        icon.innerHTML = playing
+          ? '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>'
+          : '<polygon points="5,3 19,12 5,21"/>';
+      }
+      const disc = player?.querySelector(".music-disc") as HTMLElement;
+      if (disc) disc.style.animationPlayState = playing ? "running" : "paused";
+    });
+
+    playlistEl?.addEventListener("click", (e) => {
+      const track = (e.target as HTMLElement).closest(".music-track") as HTMLElement;
+      if (track) {
+        selectTrack(parseInt(track.dataset.index || "0"));
+        playing = true;
+        const icon = document.getElementById("play-icon");
+        if (icon) icon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+      }
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", initMusicPlayer);
+  document.addEventListener("astro:page-load", initMusicPlayer);
+</script>
+
+<style>
+  .music-disc {
+    animation: spin 3s linear infinite;
+    animation-play-state: paused;
+  }
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+</style>

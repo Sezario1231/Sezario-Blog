@@ -1,0 +1,34 @@
+---
+interface Props {
+  tags: string[];
+}
+
+const { tags } = Astro.props;
+
+const sizes = [
+  "text-xs px-2.5 py-1",
+  "text-sm px-3 py-1.5",
+  "text-base px-4 py-1.5",
+  "text-lg px-5 py-2",
+];
+
+const tagList = tags.map((tag, i) => ({
+  name: tag,
+  size: sizes[i % sizes.length],
+}));
+---
+
+<div class="flex flex-wrap gap-2 justify-center">
+  {
+    tagList.map((tag, i) => (
+      <span
+        class="inline-flex items-center rounded-full bg-secondary/60 font-medium text-muted-foreground hover:bg-primary/15 hover:text-primary hover:scale-110 transition-all duration-200 cursor-default"
+        class:list={[tag.size]}
+        style={`animation-delay: ${i * 0.03}s`}
+        data-animate
+      >
+        {tag.name}
+      </span>
+    ))
+  }
+</div>

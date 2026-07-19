@@ -1,0 +1,77 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import HeroSection from "@/components/HeroSection.astro";
+import DotGrid from "@/components/DotGrid.astro";
+import ScrollIndicator from "@/components/ScrollIndicator.astro";
+import ArticleCard from "@/components/ArticleCard";
+import Marquee from "@/components/Marquee.astro";
+import { Button } from "@/components/ui/Button";
+import { getCollection } from "astro:content";
+
+const allPosts = await getCollection("posts");
+const publishedPosts = allPosts
+  .filter((post) => !post.data.draft)
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+const latestPosts = publishedPosts.slice(0, 6);
+---
+
+<BaseLayout title="Sezario. - 全栈开发者" description="打造极致性能的现代化 Web 体验。">
+  <div class="relative">
+    <DotGrid />
+    <HeroSection />
+    <ScrollIndicator />
+  </div>
+
+  <Marquee />
+
+  <section id="posts" class="container max-w-6xl mx-auto px-5 md:px-8 py-20">
+    <div class="flex items-end justify-between mb-12" data-animate>
+      <div>
+        <h2 class="text-3xl font-bold tracking-tight">最新文章</h2>
+        <p class="mt-2 text-muted-foreground text-sm">关于代码、系统与工程实践的思考。</p>
+      </div>
+      <a href="/posts" class="hidden sm:inline-flex">
+        <Button variant="outline" size="sm" className="active:scale-[0.97]">
+          查看全部
+          <svg class="w-3.5 h-3.5 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </Button>
+      </a>
+    </div>
+
+    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {
+        latestPosts.length > 0 ? (
+          latestPosts.map((post, i) => (
+            <ArticleCard
+              slug={post.slug}
+              title={post.data.title}
+              date={post.data.date}
+              category={post.data.category}
+              description={post.data.description}
+              tags={post.data.tags}
+              style={{ animationDelay: `${i * 0.05}s` }}
+              data-animate=""
+            />
+          ))
+        ) : (
+          <div class="col-span-full text-center py-16 text-muted-foreground">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+              </svg>
+            </div>
+            <p>暂无文章，敬请期待。</p>
+          </div>
+        )
+      }
+    </div>
+
+    <div class="mt-12 text-center sm:hidden">
+      <a href="/posts">
+        <Button variant="outline" size="sm" className="active:scale-[0.97]">查看全部文章</Button>
+      </a>
+    </div>
+  </section>
+</BaseLayout>

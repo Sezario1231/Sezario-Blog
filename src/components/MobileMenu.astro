@@ -1,0 +1,52 @@
+---
+---
+
+<div class="mobile-menu-overlay fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300"></div>
+<aside class="mobile-menu-drawer fixed top-0 right-0 z-[70] h-full w-72 bg-background border-l border-border p-6 transform translate-x-full transition-transform duration-300">
+  <div class="flex justify-between items-center mb-8">
+    <span class="text-lg font-bold text-primary">菜单</span>
+    <button class="mobile-menu-close p-2 rounded-lg hover:bg-muted transition-colors" aria-label="关闭菜单">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  </div>
+  <nav class="flex flex-col gap-1">
+    <a href="/" class="mobile-nav-link px-4 py-3 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-all">首页</a>
+    <a href="/posts" class="mobile-nav-link px-4 py-3 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-all">文章</a>
+    <a href="/projects" class="mobile-nav-link px-4 py-3 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-all">项目</a>
+    <a href="/archive" class="mobile-nav-link px-4 py-3 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-all">归档</a>
+    <a href="/about" class="mobile-nav-link px-4 py-3 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-all">关于</a>
+    <a href="/contact" class="mobile-nav-link px-4 py-3 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-all">联系</a>
+  </nav>
+</aside>
+
+<script>
+  const overlay = document.querySelector(".mobile-menu-overlay") as HTMLElement;
+  const drawer = document.querySelector(".mobile-menu-drawer") as HTMLElement;
+  const openBtn = document.querySelector(".mobile-menu-open");
+  const closeBtn = document.querySelector(".mobile-menu-close");
+
+  function openMenu() {
+    overlay.classList.remove("opacity-0", "pointer-events-none");
+    overlay.classList.add("opacity-100", "pointer-events-auto");
+    drawer.classList.remove("translate-x-full");
+    drawer.classList.add("translate-x-0");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeMenu() {
+    overlay.classList.add("opacity-0", "pointer-events-none");
+    overlay.classList.remove("opacity-100", "pointer-events-auto");
+    drawer.classList.add("translate-x-full");
+    drawer.classList.remove("translate-x-0");
+    document.body.style.overflow = "";
+  }
+
+  openBtn?.addEventListener("click", openMenu);
+  closeBtn?.addEventListener("click", closeMenu);
+  overlay?.addEventListener("click", closeMenu);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeMenu();
+  });
+</script>

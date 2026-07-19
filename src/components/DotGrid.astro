@@ -1,0 +1,28 @@
+---
+---
+
+<div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+  <div
+    class="dot-grid dot-grid-dark absolute inset-0 hidden dark:block"
+    style="background-image: radial-gradient(rgba(255,255,255,0.07) 1px, transparent 1px); background-size: 28px 28px;"
+  ></div>
+  <div
+    class="dot-grid dot-grid-light absolute inset-0 dark:hidden"
+    style="background-image: radial-gradient(rgba(100,116,139,0.12) 1px, transparent 1px); background-size: 28px 28px;"
+  ></div>
+  <div class="dot-grid-overlay absolute inset-0 opacity-0"></div>
+</div>
+
+<script>
+  const grids = document.querySelectorAll(".dot-grid");
+  if (grids.length > 0) {
+    document.addEventListener("mousemove", (e) => {
+      const x = (e.clientX / window.innerWidth - 0.5) * 12;
+      const y = (e.clientY / window.innerHeight - 0.5) * 12;
+      grids.forEach((el) => {
+        (el as HTMLElement).style.transform = `translate(${x}px, ${y}px)`;
+        (el as HTMLElement).style.transition = "transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)";
+      });
+    });
+  }
+</script>

@@ -1,0 +1,53 @@
+---
+---
+<div class="subscribe-card p-6 rounded-2xl border border-border/40 bg-card/50 overflow-hidden relative" data-animate>
+  <div class="absolute -top-10 -right-10 w-32 h-32 bg-primary/8 rounded-full blur-2xl"></div>
+  <div class="relative z-10">
+    <h3 class="text-lg font-semibold mb-2">订阅更新</h3>
+    <p class="text-sm text-muted-foreground/70 mb-4">新文章发布时收到通知，不会 spam。</p>
+    <form id="subscribe-form" class="flex gap-2">
+      <input
+        type="email"
+        id="subscribe-email"
+        placeholder="your@email.com"
+        required
+        class="flex-1 px-3.5 py-2.5 rounded-xl bg-muted/50 border border-border/50 text-sm placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
+      />
+      <button
+        type="submit"
+        class="px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:shadow-lg hover:shadow-primary/20 transition-all duration-300 active:scale-[0.97]"
+      >
+        订阅
+      </button>
+    </form>
+    <p id="subscribe-msg" class="text-xs mt-2 hidden"></p>
+  </div>
+</div>
+
+<script>
+  document.getElementById("subscribe-form")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = (document.getElementById("subscribe-email") as HTMLInputElement).value;
+    const msg = document.getElementById("subscribe-msg");
+    try {
+      // 存储到 localStorage（实际项目中应调用 API）
+      const subs = JSON.parse(localStorage.getItem("subscribers") || "[]");
+      if (!subs.includes(email)) {
+        subs.push(email);
+        localStorage.setItem("subscribers", JSON.stringify(subs));
+      }
+      if (msg) {
+        msg.textContent = "订阅成功！感谢关注。";
+        msg.className = "text-xs mt-2 text-green-500";
+        msg.classList.remove("hidden");
+      }
+      (document.getElementById("subscribe-email") as HTMLInputElement).value = "";
+    } catch {
+      if (msg) {
+        msg.textContent = "订阅失败，请稍后再试。";
+        msg.className = "text-xs mt-2 text-red-500";
+        msg.classList.remove("hidden");
+      }
+    }
+  });
+</script>
