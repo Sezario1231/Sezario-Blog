@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
-import { getEntry, getCollection } from "astro:content";
+import { getPostBySlug, getPosts } from "@/lib/posts";
+import { marked } from "marked";
 import Giscus from "@/components/Giscus";
 import ShareButtons from "@/components/ShareButtons.astro";
 import RelatedPosts from "@/components/RelatedPosts.astro";
@@ -13,18 +14,16 @@ if (!slug || Array.isArray(slug)) {
   return Astro.redirect("/404");
 }
 
-const post = await getEntry("posts", slug);
+const post = await getPostBySlug(slug);
 
-if (!post || post.data.draft) {
+if (!post || post.draft) {
   return Astro.redirect("/404");
 }
 
-const { Content, headings } = await post.render();
+const renderedBody = marked.parse(post.body || "");
 
-const allPosts = await getCollection("posts");
-const publishedPosts = allPosts
-  .filter((p) => !p.data.draft)
-  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+const allPosts = await getPosts();
+const publishedPosts = allPosts;
 
 const currentIndex = publishedPosts.findIndex((p) => p.slug === slug);
 const prevPost = currentIndex < publishedPosts.length - 1 ? publishedPosts[currentIndex + 1] : null;
@@ -33,42 +32,53 @@ const nextPost = currentIndex > 0 ? publishedPosts[currentIndex - 1] : null;
 const wordCount = post.body ? post.body.split(/\s+/).length : 0;
 const readingTime = Math.max(1, Math.ceil(wordCount / 200));
 
-const tocHeadings = headings.filter((h: any) => h.depth >= 2 && h.depth <= 3);
+const headingRegex = /^(#{2,3})\s+(.+)$/gm;
+const tocHeadings: { depth: number; slug: string; text: string }[] = [];
+let match;
+while ((match = headingRegex.exec(post.body)) !== null) {
+  const depth = match[1].length;
+  const text = match[2].trim();
+  const headingSlug = text
+    .toLowerCase()
+    .replace(/[^\w\u4e00-\u9fff]+/g, "-")
+    .replace(/^-|-$/g, "");
+  tocHeadings.push({ depth, slug: headingSlug, text });
+}
 ---
 
-<BaseLayout title={`${post.data.title} - Sezario.`} description={post.data.description} image={post.data.coverImage} type="article">
+<BaseLayout title={`${post.title} - Sezario的个人小屋`} description={post.description} image={post.coverImage} type="article">
   <article class="container max-w-6xl mx-auto px-5 md:px-8 py-16 md:py-24">
     <div class="flex flex-col lg:flex-row gap-12">
       <div class="flex-1 min-w-0 max-w-3xl">
-        <Breadcrumb items={[{ label: "文章", href: "/posts" }, { label: post.data.title }]} />
+        <Breadcrumb items={[{ label: "文章", href: "/posts" }, { label: post.title }]} />
 
-        {post.data.coverImage && (
+        {post.coverImage && (
           <div class="mb-8 rounded-2xl overflow-hidden border border-border/40" data-animate>
-            <img src={post.data.coverImage} alt={post.data.title} class="w-full h-48 md:h-64 object-cover" loading="lazy" />
+            <img src={post.coverImage} alt={post.title} class="w-full h-48 md:h-64 object-cover" loading="lazy" />
           </div>
         )}
 
         <header class="mb-12" data-animate>
           <div class="flex items-center gap-3 mb-4 text-sm text-muted-foreground">
-            <time datetime={post.data.date.toISOString()}>
-              {post.data.date.toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" })}
+            <time datetime={post.date.toISOString()}>
+              {post.date.toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" })}
             </time>
             <span class="w-1 h-1 rounded-full bg-muted-foreground/40"></span>
             <span>{readingTime} 分钟阅读</span>
             <span class="w-1 h-1 rounded-full bg-muted-foreground/40"></span>
-            <span class="text-primary">{post.data.category}</span>
+            <span class="text-primary">{post.category}</span>
           </div>
 
           <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight leading-tight mb-5">
-            {post.data.title}
+            {post.title}
           </h1>
 
           <p class="text-lg text-muted-foreground leading-relaxed">
-            {post.data.description}
+            {post.description}
           </p>
 
           <div class="flex flex-wrap gap-2 mt-6">
-            {post.data.tags.map((tag: string) => (
+            {post.tags.map((tag: string) => (
               <span class="inline-flex items-center rounded-full bg-secondary/60 px-2.5 py-1 text-xs text-muted-foreground">
                 {tag}
               </span>
@@ -76,16 +86,14 @@ const tocHeadings = headings.filter((h: any) => h.depth >= 2 && h.depth <= 3);
           </div>
 
           <div class="flex items-center gap-4 mt-6 pt-6 border-t border-border/30">
-            <ShareButtons title={post.data.title} description={post.data.description} url={`/posts/${slug}`} />
+            <ShareButtons title={post.title} description={post.description} url={`/posts/${slug}`} />
             <div class="ml-auto">
               <LikeButton slug={slug} />
             </div>
           </div>
         </header>
 
-        <div class="prose prose-lg dark:prose-invert max-w-none" data-animate>
-          <Content />
-        </div>
+        <div class="prose prose-lg dark:prose-invert max-w-none" data-animate set:html={renderedBody}></div>
 
         <div class="border-t border-border/50 mt-16 pt-8" data-animate>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -96,7 +104,7 @@ const tocHeadings = headings.filter((h: any) => h.depth >= 2 && h.depth <= 3);
               >
                 <span class="text-xs text-muted-foreground mb-1">&larr; 上一篇</span>
                 <span class="font-medium group-hover:text-primary transition-colors duration-200 line-clamp-1">
-                  {prevPost.data.title}
+                  {prevPost.title}
                 </span>
               </a>
             )}
@@ -107,14 +115,14 @@ const tocHeadings = headings.filter((h: any) => h.depth >= 2 && h.depth <= 3);
               >
                 <span class="text-xs text-muted-foreground mb-1">下一篇 &rarr;</span>
                 <span class="font-medium group-hover:text-primary transition-colors duration-200 line-clamp-1">
-                  {nextPost.data.title}
+                  {nextPost.title}
                 </span>
               </a>
             )}
           </div>
         </div>
 
-        <RelatedPosts currentSlug={slug} tags={post.data.tags} category={post.data.category} />
+        <RelatedPosts currentSlug={slug} tags={post.tags} category={post.category} />
 
         <div data-animate>
           <Giscus
@@ -135,7 +143,6 @@ const tocHeadings = headings.filter((h: any) => h.depth >= 2 && h.depth <= 3);
               <p class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">本页目录</p>
               <span class="text-[10px] text-primary/60 font-mono" id="toc-progress">0%</span>
             </div>
-            <!-- 阅读进度条 -->
             <div class="h-0.5 rounded-full bg-muted/30 mb-4 overflow-hidden">
               <div class="h-full bg-primary/50 rounded-full transition-all duration-150" id="toc-bar" style="width: 0%"></div>
             </div>
@@ -160,41 +167,38 @@ const tocHeadings = headings.filter((h: any) => h.depth >= 2 && h.depth <= 3);
 </BaseLayout>
 
 <script>
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
+  document.addEventListener("DOMContentLoaded", function() {
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
         if (entry.isIntersecting) {
-          const id = entry.target.id;
-          document.querySelectorAll(`aside nav a`).forEach((link) => {
+          var id = entry.target.id;
+          document.querySelectorAll("aside nav a").forEach(function(link) {
             link.classList.remove("text-foreground", "border-primary", "font-medium", "active");
             link.classList.add("text-muted-foreground", "border-transparent");
-            if (link.getAttribute("href") === `#${id}`) {
+            if (link.getAttribute("href") === "#" + id) {
               link.classList.add("text-foreground", "border-primary", "font-medium", "active");
               link.classList.remove("text-muted-foreground", "border-transparent");
             }
           });
         }
       });
-    },
-    { rootMargin: "-80px 0px -60% 0px", threshold: 0 }
-  );
+    }, { rootMargin: "-80px 0px -60% 0px", threshold: 0 });
 
-  document.querySelectorAll("article h2[id], article h3[id]").forEach((h) => observer.observe(h));
+    document.querySelectorAll("article h2[id], article h3[id]").forEach(function(h) { observer.observe(h); });
 
-  // 阅读进度
-  function updateReadingProgress() {
-    const article = document.querySelector("article");
-    const bar = document.getElementById("toc-bar");
-    const text = document.getElementById("toc-progress");
-    if (!article || !bar) return;
-    const rect = article.getBoundingClientRect();
-    const total = rect.height - window.innerHeight;
-    const current = -rect.top;
-    const pct = Math.min(100, Math.max(0, Math.round((current / total) * 100)));
-    bar.style.width = pct + "%";
-    if (text) text.textContent = pct + "%";
-  }
-  window.addEventListener("scroll", updateReadingProgress, { passive: true });
-  updateReadingProgress();
-</script>
+    function updateReadingProgress() {
+      var article = document.querySelector("article");
+      var bar = document.getElementById("toc-bar");
+      var text = document.getElementById("toc-progress");
+      if (!article || !bar) return;
+      var rect = article.getBoundingClientRect();
+      var total = rect.height - window.innerHeight;
+      var current = -rect.top;
+      var pct = Math.min(100, Math.max(0, Math.round((current / total) * 100)));
+      bar.style.width = pct + "%";
+      if (text) text.textContent = pct + "%";
+    }
+    window.addEventListener("scroll", updateReadingProgress, { passive: true });
+    updateReadingProgress();
+  });
 </script>

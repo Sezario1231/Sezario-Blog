@@ -1,10 +1,10 @@
 import type { APIRoute } from "astro";
-import { getCollection } from "astro:content";
+import { getPosts } from "@/lib/posts";
 
-export const prerender = true;
+export const prerender = false;
 
 export const GET: APIRoute = async ({ site }) => {
-  const posts = await getCollection("posts", ({ data }) => !data.draft);
+  const posts = await getPosts();
 
   if (!site) {
     return new Response("Site URL not configured", { status: 500 });
@@ -12,16 +12,15 @@ export const GET: APIRoute = async ({ site }) => {
 
   const siteUrl = site.origin;
   const items = posts
-    .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
     .map(
       (post) => `
   <item>
     <guid isPermaLink="true">${siteUrl}/posts/${post.slug}</guid>
-    <title>${escapeXml(post.data.title)}</title>
-    <description>${escapeXml(post.data.description)}</description>
+    <title>${escapeXml(post.title)}</title>
+    <description>${escapeXml(post.description)}</description>
     <link>${siteUrl}/posts/${post.slug}</link>
-    <pubDate>${post.data.date.toUTCString()}</pubDate>
-    <category>${escapeXml(post.data.category)}</category>
+    <pubDate>${post.date.toUTCString()}</pubDate>
+    <category>${escapeXml(post.category)}</category>
   </item>`
     )
     .join("\n");
@@ -29,8 +28,8 @@ export const GET: APIRoute = async ({ site }) => {
   const rss = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Sezario. Blog</title>
-    <description>关于技术、设计与开发的个人博客</description>
+    <title>Sezario的个人小屋</title>
+    <description>尝试了解AI｜喜欢折腾｜记录学习日常</description>
     <link>${siteUrl}</link>
     <language>zh-CN</language>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>

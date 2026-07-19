@@ -1,11 +1,11 @@
 import type { APIRoute } from "astro";
-import { getCollection } from "astro:content";
+import { getPosts } from "@/lib/posts";
 
-export const prerender = true;
+export const prerender = false;
 
 export const GET: APIRoute = async ({ site }) => {
   const siteUrl = site?.origin || "https://your-domain.com";
-  const posts = await getCollection("posts", ({ data }) => !data.draft);
+  const posts = await getPosts();
 
   const staticPages = [
     { loc: "", priority: "1.0", changefreq: "daily" },
@@ -19,7 +19,7 @@ export const GET: APIRoute = async ({ site }) => {
   const postUrls = posts.map(
     (post) => `  <url>
     <loc>${siteUrl}/posts/${post.slug}</loc>
-    <lastmod>${post.data.date.toISOString()}</lastmod>
+    <lastmod>${post.date.toISOString()}</lastmod>
     <priority>0.7</priority>
   </url>`
   );

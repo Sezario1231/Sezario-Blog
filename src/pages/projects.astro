@@ -1,37 +1,47 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import ProjectCard from "@/components/ProjectCard";
+import { getSupabase } from "@/lib/supabase";
 
-const projects = [
-  {
-    name: "aurora-ui",
-    description: "一个内置动效原语的 Headless 组件库。零运行时、支持 Tree-shake、完全类型化。",
-    techStack: ["React", "TypeScript", "Tailwind", "Framer Motion"],
-    github: "https://github.com",
-    demo: "https://aurora-ui.dev",
-  },
-  {
-    name: "swift-deploy",
-    description: "零配置部署平台，支持 Astro 和 Next.js 应用。边缘优先，自动预览部署。",
-    techStack: ["Go", "Docker", "Cloudflare Workers", "PostgreSQL"],
-    github: "https://github.com",
-  },
-  {
-    name: "neural-search",
-    description: "基于向量嵌入的语义搜索引擎。自然地搜索文档、代码库和知识库。",
-    techStack: ["Python", "FastAPI", "pgvector", "OpenAI"],
-    github: "https://github.com",
-    demo: "https://neural-search.dev",
-  },
-];
+const supabase = getSupabase();
+const { data: projectsData } = await supabase
+  .from("projects")
+  .select("*")
+  .order("sort_order", { ascending: true });
+
+interface SupabaseProject {
+  id: string;
+  name: string;
+  description: string;
+  tech_stack: string | string[];
+  github?: string;
+  demo?: string;
+  sort_order: number;
+}
+
+function parseTechStack(ts: string | string[]): string[] {
+  if (Array.isArray(ts)) return ts;
+  if (typeof ts === "string") {
+    try { return JSON.parse(ts); } catch { return ts.split(",").map((s: string) => s.trim()); }
+  }
+  return [];
+}
+
+const projects = ((projectsData || []) as SupabaseProject[]).map((p) => ({
+  name: p.name,
+  description: p.description,
+  techStack: parseTechStack(p.tech_stack),
+  github: p.github,
+  demo: p.demo,
+}));
 ---
 
-<BaseLayout title="项目 - Sezario." description="开源项目与技术探索。">
+<BaseLayout title="项目 - Sezario的个人小屋" description="开源项目与技术探索。">
   <section class="container max-w-6xl mx-auto px-5 md:px-8 py-16 md:py-24">
     <div class="mb-14" data-animate>
       <h1 class="text-4xl md:text-5xl font-bold tracking-tight mb-3">项目</h1>
       <p class="text-muted-foreground max-w-xl">
-        精选开源项目与技术实验。
+        目前开源的项目，持续更新中。
       </p>
     </div>
 

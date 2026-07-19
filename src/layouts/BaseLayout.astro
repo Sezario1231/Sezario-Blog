@@ -36,7 +36,7 @@ const ogImage = image ? (image.startsWith("http") ? image : `${siteUrl}${image}`
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description ?? title} />
     <meta property="og:url" content={pageUrl} />
-    <meta property="og:site_name" content="Sezario." />
+    <meta property="og:site_name" content="Sezario的个人小屋" />
     <meta property="og:image" content={ogImage} />
     <meta property="og:locale" content="zh_CN" />
 
@@ -56,8 +56,8 @@ const ogImage = image ? (image.startsWith("http") ? image : `${siteUrl}${image}`
       description: description ?? title,
       url: pageUrl,
       ...(type === "article" ? {} : {
-        author: { "@type": "Person", name: "Sezario", url: siteUrl },
-        publisher: { "@type": "Organization", name: "Sezario.", url: siteUrl },
+        author: { "@type": "Person", name: "Sezario", url: "https://github.com/Sezario1231" },
+        publisher: { "@type": "Organization", name: "Sezario的个人小屋", url: siteUrl },
       }),
     })} />
 

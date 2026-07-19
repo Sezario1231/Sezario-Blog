@@ -3,17 +3,15 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
 import ArticleCard from "@/components/ArticleCard";
 import FilterBar from "@/components/FilterBar.astro";
 import Pagination from "@/components/Pagination.astro";
-import { getCollection } from "astro:content";
+import { getPosts } from "@/lib/posts";
 
 const POSTS_PER_PAGE = 9;
 
-const allPosts = await getCollection("posts");
-const published = allPosts
-  .filter((post) => !post.data.draft)
-  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+const allPosts = await getPosts();
+const published = allPosts;
 
-const categories = [...new Set(published.map((p) => p.data.category))];
-const tags = [...new Set(published.flatMap((p) => p.data.tags))];
+const categories = [...new Set(published.map((p) => p.category))];
+const tags = [...new Set(published.flatMap((p) => p.tags))];
 
 const activeCategory = Astro.url.searchParams.get("category");
 const activeTag = Astro.url.searchParams.get("tag");
@@ -22,10 +20,10 @@ const currentPage = Math.max(1, parseInt(pageParam || "1", 10));
 
 let filteredPosts = published;
 if (activeCategory) {
-  filteredPosts = filteredPosts.filter((p) => p.data.category === activeCategory);
+  filteredPosts = filteredPosts.filter((p) => p.category === activeCategory);
 }
 if (activeTag) {
-  filteredPosts = filteredPosts.filter((p) => p.data.tags.includes(activeTag));
+  filteredPosts = filteredPosts.filter((p) => p.tags.includes(activeTag));
 }
 
 const totalPages = Math.ceil(filteredPosts.length / POSTS_PER_PAGE);
@@ -40,7 +38,7 @@ if (activeTag) filterParams.set("tag", activeTag);
 const baseUrl = filterParams.toString() ? `/posts?${filterParams.toString()}` : "/posts";
 ---
 
-<BaseLayout title="文章 - Sezario." description="全部文章列表">
+<BaseLayout title="文章 - Sezario的个人小屋" description="全部文章列表">
   <section class="container max-w-6xl mx-auto px-5 md:px-8 py-16 md:py-24">
     <div class="mb-10" data-animate>
       <h1 class="text-4xl md:text-5xl font-bold tracking-tight mb-3">全部文章</h1>
@@ -59,11 +57,11 @@ const baseUrl = filterParams.toString() ? `/posts?${filterParams.toString()}` : 
           paginatedPosts.map((post, i) => (
             <ArticleCard
               slug={post.slug}
-              title={post.data.title}
-              date={post.data.date}
-              category={post.data.category}
-              description={post.data.description}
-              tags={post.data.tags}
+              title={post.title}
+              date={post.date}
+              category={post.category}
+              description={post.description}
+              tags={post.tags}
               style={{ animationDelay: `${i * 0.05}s` }}
               data-animate=""
             />
@@ -84,7 +82,6 @@ const baseUrl = filterParams.toString() ? `/posts?${filterParams.toString()}` : 
 
     <Pagination currentPage={currentPage} totalPages={totalPages} baseUrl={baseUrl} />
 
-    {/* 无限滚动加载指示器 */}
     {currentPage < totalPages && (
       <div id="infinite-scroll-sentinel" class="flex justify-center py-8">
         <div class="flex items-center gap-2 text-sm text-muted-foreground/60">
@@ -99,7 +96,6 @@ const baseUrl = filterParams.toString() ? `/posts?${filterParams.toString()}` : 
 </BaseLayout>
 
 <script>
-  // 无限滚动
   function initInfiniteScroll() {
     const sentinel = document.getElementById("infinite-scroll-sentinel");
     if (!sentinel) return;
@@ -147,7 +143,6 @@ const baseUrl = filterParams.toString() ? `/posts?${filterParams.toString()}` : 
         });
         currentPage = String(nextPage);
 
-        // 检查是否还有下一页
         const totalPages = doc.querySelector("[data-total-pages]");
         if (totalPages) {
           const total = parseInt(totalPages.getAttribute("data-total-pages") || "0");

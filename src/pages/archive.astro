@@ -1,23 +1,21 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import Timeline from "@/components/Timeline.astro";
-import { getCollection } from "astro:content";
+import { getPosts } from "@/lib/posts";
 
-const allPosts = await getCollection("posts");
-const publishedPosts = allPosts
-  .filter((post) => !post.data.draft)
-  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+const allPosts = await getPosts();
+const publishedPosts = allPosts;
 
 const timelineItems = publishedPosts.map((post) => ({
-  date: post.data.date,
-  title: post.data.title,
+  date: post.date,
+  title: post.title,
   slug: post.slug,
-  category: post.data.category,
-  description: post.data.description,
+  category: post.category,
+  description: post.description,
 }));
 ---
 
-<BaseLayout title="归档 - Sezario." description="按时间浏览所有文章。">
+<BaseLayout title="归档 - Sezario的个人小屋" description="按时间浏览所有文章。">
   <section class="container max-w-6xl mx-auto px-5 md:px-8 py-16 md:py-24">
     <div class="mb-14" data-animate>
       <h1 class="text-4xl md:text-5xl font-bold tracking-tight mb-3">归档</h1>

@@ -6,16 +6,13 @@ import ScrollIndicator from "@/components/ScrollIndicator.astro";
 import ArticleCard from "@/components/ArticleCard";
 import Marquee from "@/components/Marquee.astro";
 import { Button } from "@/components/ui/Button";
-import { getCollection } from "astro:content";
+import { getPosts } from "@/lib/posts";
 
-const allPosts = await getCollection("posts");
-const publishedPosts = allPosts
-  .filter((post) => !post.data.draft)
-  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
-const latestPosts = publishedPosts.slice(0, 6);
+const allPosts = await getPosts();
+const latestPosts = allPosts.slice(0, 6);
 ---
 
-<BaseLayout title="Sezario. - 全栈开发者" description="打造极致性能的现代化 Web 体验。">
+<BaseLayout title="Sezario的个人小屋" description="尝试了解AI｜喜欢折腾｜记录学习日常">
   <div class="relative">
     <DotGrid />
     <HeroSection />
@@ -28,7 +25,7 @@ const latestPosts = publishedPosts.slice(0, 6);
     <div class="flex items-end justify-between mb-12" data-animate>
       <div>
         <h2 class="text-3xl font-bold tracking-tight">最新文章</h2>
-        <p class="mt-2 text-muted-foreground text-sm">关于代码、系统与工程实践的思考。</p>
+        <p class="mt-2 text-muted-foreground text-sm">关于AI、代码与学习日常的记录。</p>
       </div>
       <a href="/posts" class="hidden sm:inline-flex">
         <Button variant="outline" size="sm" className="active:scale-[0.97]">
@@ -46,11 +43,11 @@ const latestPosts = publishedPosts.slice(0, 6);
           latestPosts.map((post, i) => (
             <ArticleCard
               slug={post.slug}
-              title={post.data.title}
-              date={post.data.date}
-              category={post.data.category}
-              description={post.data.description}
-              tags={post.data.tags}
+              title={post.title}
+              date={post.date}
+              category={post.category}
+              description={post.description}
+              tags={post.tags}
               style={{ animationDelay: `${i * 0.05}s` }}
               data-animate=""
             />

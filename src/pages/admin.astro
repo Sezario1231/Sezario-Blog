@@ -1,16 +1,9 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
-import { getCollection } from "astro:content";
-
-const allPosts = await getCollection("posts");
-const published = allPosts.filter((p) => !p.data.draft);
-const drafts = allPosts.filter((p) => p.data.draft);
-const categories = [...new Set(published.map((p) => p.data.category))];
-const allTags = [...new Set(published.flatMap((p) => p.data.tags))];
-const totalWords = published.reduce((sum, p) => sum + (p.body?.split(/\s+/).length || 0), 0);
+export const prerender = false;
 ---
 
-<BaseLayout title="后台管理 - Sezario." description="博客管理面板">
+<BaseLayout title="后台管理 - Sezario的个人小屋" description="博客管理面板">
   <!-- 登录界面 -->
   <section id="admin-login" class="container max-w-sm mx-auto px-5 py-32">
     <div class="text-center mb-8">
@@ -25,7 +18,7 @@ const totalWords = published.reduce((sum, p) => sum + (p.body?.split(/\s+/).leng
         class="w-full px-4 py-3 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none focus:border-primary/40 transition-colors"
         autocomplete="current-password" />
       <p id="login-error" class="text-xs text-red-500 hidden">密码错误，请重试</p>
-      <button type="submit" class="w-full px-4 py-3 rounded-xl bg-primary/80 text-white text-sm font-medium hover:bg-primary/90 transition-colors">
+      <button type="submit" id="login-btn" class="w-full px-4 py-3 rounded-xl bg-primary/80 text-white text-sm font-medium hover:bg-primary/90 transition-colors">
         进入管理面板
       </button>
     </form>
@@ -33,68 +26,57 @@ const totalWords = published.reduce((sum, p) => sum + (p.body?.split(/\s+/).leng
 
   <!-- 管理面板 -->
   <section id="admin-panel" class="container max-w-6xl mx-auto px-5 md:px-8 py-12 md:py-16 hidden">
-    <div class="mb-8">
-      <h1 class="text-3xl md:text-4xl font-bold tracking-tight mb-2">后台管理</h1>
-      <p class="text-sm text-muted-foreground/60">管理站点内容、外观和数据</p>
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <h1 class="text-3xl md:text-4xl font-bold tracking-tight mb-2">后台管理</h1>
+        <p class="text-sm text-muted-foreground/60">管理站点内容、外观和数据</p>
+      </div>
+      <button id="logout-btn" class="px-4 py-2 rounded-xl border border-border/40 bg-card/50 text-sm text-muted-foreground/60 hover:text-red-500 hover:border-red-500/20 transition-all">退出</button>
     </div>
 
     <!-- 标签导航 -->
     <div class="flex gap-1 mb-8 overflow-x-auto pb-2 border-b border-border/30" id="admin-tabs">
       <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap bg-primary/10 text-primary" data-tab="dashboard">数据看板</button>
       <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap text-muted-foreground/60 hover:bg-muted/30" data-tab="posts">文章管理</button>
-      <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap text-muted-foreground/60 hover:bg-muted/30" data-tab="guestbook">留言管理</button>
-      <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap text-muted-foreground/60 hover:bg-muted/30" data-tab="subscribers">订阅管理</button>
-      <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap text-muted-foreground/60 hover:bg-muted/30" data-tab="bookmarks">收藏管理</button>
+      <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap text-muted-foreground/60 hover:bg-muted/30" data-tab="projects">项目管理</button>
+      <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap text-muted-foreground/60 hover:bg-muted/30" data-tab="quotes">名言管理</button>
+      <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap text-muted-foreground/60 hover:bg-muted/30" data-tab="settings">站点设置</button>
       <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap text-muted-foreground/60 hover:bg-muted/30" data-tab="plugins">插件管理</button>
       <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap text-muted-foreground/60 hover:bg-muted/30" data-tab="appearance">主题外观</button>
-      <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap text-muted-foreground/60 hover:bg-muted/30" data-tab="settings">站点设置</button>
-      <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap text-muted-foreground/60 hover:bg-muted/30" data-tab="data">数据管理</button>
     </div>
 
-    <!-- 数据看板 -->
+    <!-- ===== 数据看板 ===== -->
     <div class="tab-panel" id="panel-dashboard">
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div class="p-5 rounded-xl border border-border/40 bg-card/50">
           <p class="text-xs text-muted-foreground/60 mb-1">已发布文章</p>
-          <p class="text-2xl font-bold text-primary">{published.length}</p>
+          <p class="text-2xl font-bold text-primary" id="stat-published">-</p>
         </div>
         <div class="p-5 rounded-xl border border-border/40 bg-card/50">
           <p class="text-xs text-muted-foreground/60 mb-1">草稿</p>
-          <p class="text-2xl font-bold text-orange-400">{drafts.length}</p>
+          <p class="text-2xl font-bold text-orange-400" id="stat-drafts">-</p>
         </div>
         <div class="p-5 rounded-xl border border-border/40 bg-card/50">
-          <p class="text-xs text-muted-foreground/60 mb-1">总字数</p>
-          <p class="text-2xl font-bold text-primary">{totalWords.toLocaleString()}</p>
+          <p class="text-xs text-muted-foreground/60 mb-1">项目</p>
+          <p class="text-2xl font-bold text-emerald-500" id="stat-projects">-</p>
         </div>
         <div class="p-5 rounded-xl border border-border/40 bg-card/50">
-          <p class="text-xs text-muted-foreground/60 mb-1">分类 / 标签</p>
-          <p class="text-2xl font-bold text-primary">{categories.length} / {allTags.length}</p>
-        </div>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="p-5 rounded-xl border border-border/40 bg-card/50">
-          <p class="text-xs text-muted-foreground/60 mb-1">留言数</p>
-          <p class="text-2xl font-bold text-emerald-500" id="stat-guestbook">0</p>
-        </div>
-        <div class="p-5 rounded-xl border border-border/40 bg-card/50">
-          <p class="text-xs text-muted-foreground/60 mb-1">订阅者</p>
-          <p class="text-2xl font-bold text-blue-500" id="stat-subscribers">0</p>
-        </div>
-        <div class="p-5 rounded-xl border border-border/40 bg-card/50">
-          <p class="text-xs text-muted-foreground/60 mb-1">收藏数</p>
-          <p class="text-2xl font-bold text-yellow-500" id="stat-bookmarks">0</p>
+          <p class="text-xs text-muted-foreground/60 mb-1">名言</p>
+          <p class="text-2xl font-bold text-yellow-500" id="stat-quotes">-</p>
         </div>
       </div>
     </div>
 
-    <!-- 文章管理 -->
+    <!-- ===== 文章管理 ===== -->
     <div class="tab-panel hidden" id="panel-posts">
       <div class="flex items-center gap-3 mb-4">
         <input type="text" id="post-search" placeholder="搜索文章标题..." class="flex-1 px-4 py-2 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none focus:border-primary/40" />
-        <select id="post-category-filter" class="px-3 py-2 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none">
-          <option value="">全部分类</option>
-          {categories.map((c) => <option value={c}>{c}</option>)}
+        <select id="post-status-filter" class="px-3 py-2 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none">
+          <option value="">全部状态</option>
+          <option value="published">已发布</option>
+          <option value="draft">草稿</option>
         </select>
+        <button id="btn-new-post" class="px-4 py-2 rounded-xl bg-primary/80 text-white text-sm font-medium hover:bg-primary/90 transition-colors whitespace-nowrap">新建文章</button>
       </div>
       <div class="border border-border/40 rounded-xl overflow-hidden">
         <table class="w-full text-sm">
@@ -102,104 +84,125 @@ const totalWords = published.reduce((sum, p) => sum + (p.body?.split(/\s+/).leng
             <tr class="bg-muted/30 border-b border-border/40">
               <th class="text-left px-4 py-3 font-medium text-muted-foreground/70">标题</th>
               <th class="text-left px-4 py-3 font-medium text-muted-foreground/70 hidden sm:table-cell">分类</th>
-              <th class="text-left px-4 py-3 font-medium text-muted-foreground/70 hidden md:table-cell">标签</th>
+              <th class="text-left px-4 py-3 font-medium text-muted-foreground/70 hidden md:table-cell">状态</th>
               <th class="text-left px-4 py-3 font-medium text-muted-foreground/70 hidden md:table-cell">日期</th>
               <th class="text-right px-4 py-3 font-medium text-muted-foreground/70">操作</th>
             </tr>
           </thead>
           <tbody id="posts-tbody">
-            {published.map((post) => (
-              <tr class="border-b border-border/30 hover:bg-muted/20 transition-colors post-row" data-title={post.data.title.toLowerCase()} data-category={post.data.category}>
-                <td class="px-4 py-3">
-                  <a href={`/posts/${post.slug}`} class="hover:text-primary transition-colors line-clamp-1">{post.data.title}</a>
-                </td>
-                <td class="px-4 py-3 hidden sm:table-cell">
-                  <span class="text-xs px-2 py-0.5 rounded-full bg-primary/8 text-primary/80">{post.data.category}</span>
-                </td>
-                <td class="px-4 py-3 hidden md:table-cell">
-                  <div class="flex flex-wrap gap-1">{post.data.tags.map((t) => <span class="text-[10px] px-1.5 py-0.5 rounded bg-muted/50 text-muted-foreground/60">{t}</span>)}</div>
-                </td>
-                <td class="px-4 py-3 text-xs text-muted-foreground/60 hidden md:table-cell">{post.data.date.toLocaleDateString("zh-CN")}</td>
-                <td class="px-4 py-3 text-right">
-                  <a href={`/posts/${post.slug}`} class="text-xs text-muted-foreground/60 hover:text-primary transition-colors">查看</a>
-                </td>
-              </tr>
-            ))}
+            <tr><td colspan="5" class="px-4 py-8 text-center text-sm text-muted-foreground/40">加载中...</td></tr>
           </tbody>
         </table>
       </div>
-      <p class="text-xs text-muted-foreground/40 mt-3" id="post-count">共 {published.length} 篇文章</p>
+      <p class="text-xs text-muted-foreground/40 mt-3" id="post-count"></p>
     </div>
 
-    <!-- 留言管理 -->
-    <div class="tab-panel hidden" id="panel-guestbook">
+    <!-- ===== 项目管理 ===== -->
+    <div class="tab-panel hidden" id="panel-projects">
+      <div class="flex items-center gap-3 mb-4">
+        <input type="text" id="project-search" placeholder="搜索项目名称..." class="flex-1 px-4 py-2 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none focus:border-primary/40" />
+        <button id="btn-new-project" class="px-4 py-2 rounded-xl bg-primary/80 text-white text-sm font-medium hover:bg-primary/90 transition-colors whitespace-nowrap">新建项目</button>
+      </div>
       <div class="border border-border/40 rounded-xl overflow-hidden">
         <table class="w-full text-sm">
           <thead>
             <tr class="bg-muted/30 border-b border-border/40">
-              <th class="text-left px-4 py-3 font-medium text-muted-foreground/70">昵称</th>
-              <th class="text-left px-4 py-3 font-medium text-muted-foreground/70">留言</th>
-              <th class="text-left px-4 py-3 font-medium text-muted-foreground/70 hidden md:table-cell">时间</th>
+              <th class="text-left px-4 py-3 font-medium text-muted-foreground/70">名称</th>
+              <th class="text-left px-4 py-3 font-medium text-muted-foreground/70 hidden sm:table-cell">技术栈</th>
+              <th class="text-left px-4 py-3 font-medium text-muted-foreground/70 hidden md:table-cell">GitHub</th>
               <th class="text-right px-4 py-3 font-medium text-muted-foreground/70">操作</th>
             </tr>
           </thead>
-          <tbody id="guestbook-tbody">
+          <tbody id="projects-tbody">
             <tr><td colspan="4" class="px-4 py-8 text-center text-sm text-muted-foreground/40">加载中...</td></tr>
           </tbody>
         </table>
       </div>
-      <div class="flex gap-3 mt-4">
-        <button id="export-guestbook" class="px-4 py-2 rounded-xl border border-border/40 bg-card/50 text-sm hover:border-primary/20 transition-all">导出留言</button>
-        <button id="clear-guestbook" class="px-4 py-2 rounded-xl border border-red-500/20 bg-red-500/5 text-sm text-red-500 hover:bg-red-500/10 transition-all">清空留言</button>
-      </div>
     </div>
 
-    <!-- 订阅管理 -->
-    <div class="tab-panel hidden" id="panel-subscribers">
+    <!-- ===== 名言管理 ===== -->
+    <div class="tab-panel hidden" id="panel-quotes">
+      <div class="flex items-center gap-3 mb-4">
+        <input type="text" id="quote-search" placeholder="搜索名言..." class="flex-1 px-4 py-2 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none focus:border-primary/40" />
+        <button id="btn-new-quote" class="px-4 py-2 rounded-xl bg-primary/80 text-white text-sm font-medium hover:bg-primary/90 transition-colors whitespace-nowrap">添加名言</button>
+      </div>
       <div class="border border-border/40 rounded-xl overflow-hidden">
         <table class="w-full text-sm">
           <thead>
             <tr class="bg-muted/30 border-b border-border/40">
-              <th class="text-left px-4 py-3 font-medium text-muted-foreground/70">邮箱</th>
-              <th class="text-left px-4 py-3 font-medium text-muted-foreground/70 hidden md:table-cell">订阅时间</th>
+              <th class="text-left px-4 py-3 font-medium text-muted-foreground/70">内容</th>
+              <th class="text-left px-4 py-3 font-medium text-muted-foreground/70 hidden sm:table-cell">作者</th>
               <th class="text-right px-4 py-3 font-medium text-muted-foreground/70">操作</th>
             </tr>
           </thead>
-          <tbody id="subscribers-tbody">
+          <tbody id="quotes-tbody">
             <tr><td colspan="3" class="px-4 py-8 text-center text-sm text-muted-foreground/40">加载中...</td></tr>
           </tbody>
         </table>
       </div>
-      <div class="flex gap-3 mt-4">
-        <button id="export-subscribers" class="px-4 py-2 rounded-xl border border-border/40 bg-card/50 text-sm hover:border-primary/20 transition-all">导出订阅者</button>
-        <button id="clear-subscribers" class="px-4 py-2 rounded-xl border border-red-500/20 bg-red-500/5 text-sm text-red-500 hover:bg-red-500/10 transition-all">清空订阅</button>
+    </div>
+
+    <!-- ===== 站点设置 ===== -->
+    <div class="tab-panel hidden" id="panel-settings">
+      <div class="max-w-lg space-y-4">
+        <div>
+          <label class="text-sm font-medium block mb-1.5">站点标题</label>
+          <input type="text" id="set-site_title" class="w-full px-4 py-2.5 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none focus:border-primary/40" />
+        </div>
+        <div>
+          <label class="text-sm font-medium block mb-1.5">站点描述</label>
+          <input type="text" id="set-site_description" class="w-full px-4 py-2.5 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none focus:border-primary/40" />
+        </div>
+        <div>
+          <label class="text-sm font-medium block mb-1.5">站点标语</label>
+          <input type="text" id="set-site_tagline" class="w-full px-4 py-2.5 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none focus:border-primary/40" />
+        </div>
+        <div>
+          <label class="text-sm font-medium block mb-1.5">头像 URL</label>
+          <input type="text" id="set-avatar_url" class="w-full px-4 py-2.5 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none focus:border-primary/40" />
+        </div>
+        <div>
+          <label class="text-sm font-medium block mb-1.5">Hero 标题</label>
+          <input type="text" id="set-hero_title" class="w-full px-4 py-2.5 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none focus:border-primary/40" />
+        </div>
+        <div>
+          <label class="text-sm font-medium block mb-1.5">Hero 副标题</label>
+          <input type="text" id="set-hero_subtitle" class="w-full px-4 py-2.5 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none focus:border-primary/40" />
+        </div>
+        <div>
+          <label class="text-sm font-medium block mb-1.5">Hero 标语</label>
+          <input type="text" id="set-hero_tagline" class="w-full px-4 py-2.5 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none focus:border-primary/40" />
+        </div>
+        <div>
+          <label class="text-sm font-medium block mb-1.5">Hero 技术栈（逗号分隔）</label>
+          <input type="text" id="set-hero_tech_stack" class="w-full px-4 py-2.5 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none focus:border-primary/40" />
+        </div>
+        <div>
+          <label class="text-sm font-medium block mb-1.5">关于页简介（每行一段）</label>
+          <textarea id="set-about_bio" rows="5" class="w-full px-4 py-2.5 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none focus:border-primary/40 resize-y"></textarea>
+        </div>
+        <div>
+          <label class="text-sm font-medium block mb-1.5">关于页技术栈（逗号分隔）</label>
+          <input type="text" id="set-about_tech_stack" class="w-full px-4 py-2.5 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none focus:border-primary/40" />
+        </div>
+        <div>
+          <label class="text-sm font-medium block mb-1.5">页脚邮箱</label>
+          <input type="text" id="set-footer_email" class="w-full px-4 py-2.5 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none focus:border-primary/40" />
+        </div>
+        <div>
+          <label class="text-sm font-medium block mb-1.5">GitHub 链接</label>
+          <input type="text" id="set-github_url" class="w-full px-4 py-2.5 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none focus:border-primary/40" />
+        </div>
+        <div>
+          <label class="text-sm font-medium block mb-1.5">Twitter 链接</label>
+          <input type="text" id="set-twitter_url" class="w-full px-4 py-2.5 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none focus:border-primary/40" />
+        </div>
+        <button id="save-settings" class="px-6 py-2.5 rounded-xl bg-primary/80 text-white text-sm font-medium hover:bg-primary/90 transition-colors">保存设置</button>
+        <p id="settings-saved" class="text-xs text-green-500 hidden">已保存</p>
       </div>
     </div>
 
-    <!-- 收藏管理 -->
-    <div class="tab-panel hidden" id="panel-bookmarks">
-      <div class="border border-border/40 rounded-xl overflow-hidden">
-        <table class="w-full text-sm">
-          <thead>
-            <tr class="bg-muted/30 border-b border-border/40">
-              <th class="text-left px-4 py-3 font-medium text-muted-foreground/70">标题</th>
-              <th class="text-left px-4 py-3 font-medium text-muted-foreground/70 hidden md:table-cell">链接</th>
-              <th class="text-left px-4 py-3 font-medium text-muted-foreground/70 hidden md:table-cell">时间</th>
-              <th class="text-right px-4 py-3 font-medium text-muted-foreground/70">操作</th>
-            </tr>
-          </thead>
-          <tbody id="bookmarks-tbody">
-            <tr><td colspan="4" class="px-4 py-8 text-center text-sm text-muted-foreground/40">加载中...</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="flex gap-3 mt-4">
-        <button id="export-bookmarks" class="px-4 py-2 rounded-xl border border-border/40 bg-card/50 text-sm hover:border-primary/20 transition-all">导出收藏</button>
-        <button id="clear-bookmarks" class="px-4 py-2 rounded-xl border border-red-500/20 bg-red-500/5 text-sm text-red-500 hover:bg-red-500/10 transition-all">清空收藏</button>
-      </div>
-    </div>
-
-    <!-- 插件管理 -->
+    <!-- ===== 插件管理 ===== -->
     <div class="tab-panel hidden" id="panel-plugins">
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {[
@@ -235,7 +238,7 @@ const totalWords = published.reduce((sum, p) => sum + (p.body?.split(/\s+/).leng
       </div>
     </div>
 
-    <!-- 主题外观 -->
+    <!-- ===== 主题外观 ===== -->
     <div class="tab-panel hidden" id="panel-appearance">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
@@ -279,90 +282,193 @@ const totalWords = published.reduce((sum, p) => sum + (p.body?.split(/\s+/).leng
       </div>
     </div>
 
-    <!-- 站点设置 -->
-    <div class="tab-panel hidden" id="panel-settings">
-      <div class="max-w-lg space-y-4">
-        <div>
-          <label class="text-sm font-medium block mb-1.5">站点标题</label>
-          <input type="text" id="site-title" placeholder="Sezario." class="w-full px-4 py-2.5 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none focus:border-primary/40" />
+    <!-- ===== 文章编辑器 Modal ===== -->
+    <div id="post-editor-overlay" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4">
+      <div class="bg-card border border-border/40 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-border/30">
+          <h2 class="text-lg font-bold" id="post-editor-title">新建文章</h2>
+          <button id="post-editor-close" class="text-muted-foreground/60 hover:text-primary transition-colors">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
         </div>
-        <div>
-          <label class="text-sm font-medium block mb-1.5">站点描述</label>
-          <input type="text" id="site-desc" placeholder="个人博客" class="w-full px-4 py-2.5 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none focus:border-primary/40" />
-        </div>
-        <div>
-          <label class="text-sm font-medium block mb-1.5">每页文章数</label>
-          <input type="number" id="page-size" value="6" min="3" max="20" class="w-full px-4 py-2.5 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none focus:border-primary/40" />
-        </div>
-        <div class="flex items-center justify-between p-4 rounded-xl border border-border/40 bg-card/50">
+        <form id="post-editor-form" class="p-6 space-y-4">
+          <input type="hidden" id="pe-id" />
           <div>
-            <p class="text-sm font-medium">显示字数统计</p>
-            <p class="text-xs text-muted-foreground/60">文章详情页显示阅读时间</p>
+            <label class="text-sm font-medium block mb-1.5">标题 *</label>
+            <input type="text" id="pe-title" required class="w-full px-4 py-2.5 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none focus:border-primary/40" />
           </div>
-          <label class="plugin-toggle relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" class="sr-only peer" id="show-wordcount" checked />
-            <div class="w-10 h-5 bg-muted rounded-full peer peer-checked:bg-primary/60 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
-          </label>
-        </div>
-        <div class="flex items-center justify-between p-4 rounded-xl border border-border/40 bg-card/50">
           <div>
-            <p class="text-sm font-medium">显示阅读时间</p>
-            <p class="text-xs text-muted-foreground/60">文章详情页显示预计阅读时间</p>
+            <label class="text-sm font-medium block mb-1.5">描述 *</label>
+            <input type="text" id="pe-description" required class="w-full px-4 py-2.5 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none focus:border-primary/40" />
           </div>
-          <label class="plugin-toggle relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" class="sr-only peer" id="show-readingtime" checked />
-            <div class="w-10 h-5 bg-muted rounded-full peer peer-checked:bg-primary/60 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
-          </label>
-        </div>
-        <button id="save-settings" class="px-6 py-2.5 rounded-xl bg-primary/80 text-white text-sm font-medium hover:bg-primary/90 transition-colors">保存设置</button>
-        <p id="settings-saved" class="text-xs text-green-500 hidden">已保存</p>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="text-sm font-medium block mb-1.5">分类</label>
+              <input type="text" id="pe-category" placeholder="未分类" class="w-full px-4 py-2.5 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none focus:border-primary/40" />
+            </div>
+            <div>
+              <label class="text-sm font-medium block mb-1.5">标签（逗号分隔）</label>
+              <input type="text" id="pe-tags" placeholder="tag1, tag2" class="w-full px-4 py-2.5 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none focus:border-primary/40" />
+            </div>
+          </div>
+          <div>
+            <label class="text-sm font-medium block mb-1.5">正文（Markdown）</label>
+            <textarea id="pe-body" rows="12" class="w-full px-4 py-2.5 rounded-xl border border-border/40 bg-card/50 text-sm font-mono focus:outline-none focus:border-primary/40 resize-y"></textarea>
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="checkbox" id="pe-draft" class="rounded border-border/40" />
+            <label for="pe-draft" class="text-sm text-muted-foreground/70">存为草稿</label>
+          </div>
+          <div class="flex items-center gap-3 pt-2">
+            <button type="submit" id="pe-save" class="px-6 py-2.5 rounded-xl bg-primary/80 text-white text-sm font-medium hover:bg-primary/90 transition-colors">保存</button>
+            <button type="button" id="pe-cancel" class="px-6 py-2.5 rounded-xl border border-border/40 bg-card/50 text-sm font-medium hover:bg-muted/30 transition-colors">取消</button>
+            <span id="pe-loading" class="text-xs text-muted-foreground/60 hidden">保存中...</span>
+          </div>
+        </form>
       </div>
     </div>
 
-    <!-- 数据管理 -->
-    <div class="tab-panel hidden" id="panel-data">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <h3 class="text-sm font-semibold mb-3">数据导出</h3>
-          <div class="space-y-2">
-            <button id="export-all" class="w-full px-4 py-3 rounded-xl border border-border/40 bg-card/50 text-sm text-left hover:border-primary/20 transition-all">
-              导出所有数据（JSON）
-            </button>
-            <button id="export-guestbook-2" class="w-full px-4 py-3 rounded-xl border border-border/40 bg-card/50 text-sm text-left hover:border-primary/20 transition-all">
-              导出留言数据
-            </button>
-            <button id="export-subscribers-2" class="w-full px-4 py-3 rounded-xl border border-border/40 bg-card/50 text-sm text-left hover:border-primary/20 transition-all">
-              导出订阅数据
-            </button>
-            <button id="export-bookmarks-2" class="w-full px-4 py-3 rounded-xl border border-border/40 bg-card/50 text-sm text-left hover:border-primary/20 transition-all">
-              导出收藏数据
-            </button>
-          </div>
+    <!-- ===== 项目编辑器 Modal ===== -->
+    <div id="project-editor-overlay" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4">
+      <div class="bg-card border border-border/40 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-border/30">
+          <h2 class="text-lg font-bold" id="project-editor-title">新建项目</h2>
+          <button id="project-editor-close" class="text-muted-foreground/60 hover:text-primary transition-colors">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
         </div>
-        <div>
-          <h3 class="text-sm font-semibold mb-3 text-red-500">危险操作</h3>
-          <div class="space-y-2">
-            <button id="clear-guestbook-2" class="w-full px-4 py-3 rounded-xl border border-red-500/20 bg-red-500/5 text-sm text-red-500 text-left hover:bg-red-500/10 transition-all">
-              清空所有留言
-            </button>
-            <button id="clear-subscribers-2" class="w-full px-4 py-3 rounded-xl border border-red-500/20 bg-red-500/5 text-sm text-red-500 text-left hover:bg-red-500/10 transition-all">
-              清空所有订阅
-            </button>
-            <button id="clear-bookmarks-2" class="w-full px-4 py-3 rounded-xl border border-red-500/20 bg-red-500/5 text-sm text-red-500 text-left hover:bg-red-500/10 transition-all">
-              清空所有收藏
-            </button>
-            <button id="clear-all-data" class="w-full px-4 py-3 rounded-xl border border-red-500/20 bg-red-500/5 text-sm text-red-500 text-left hover:bg-red-500/10 transition-all font-medium">
-              清除所有本地数据
-            </button>
+        <form id="project-editor-form" class="p-6 space-y-4">
+          <input type="hidden" id="pj-id" />
+          <div>
+            <label class="text-sm font-medium block mb-1.5">名称 *</label>
+            <input type="text" id="pj-name" required class="w-full px-4 py-2.5 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none focus:border-primary/40" />
           </div>
+          <div>
+            <label class="text-sm font-medium block mb-1.5">描述</label>
+            <textarea id="pj-description" rows="3" class="w-full px-4 py-2.5 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none focus:border-primary/40 resize-y"></textarea>
+          </div>
+          <div>
+            <label class="text-sm font-medium block mb-1.5">技术栈（逗号分隔）</label>
+            <input type="text" id="pj-tech_stack" placeholder="React, Node.js" class="w-full px-4 py-2.5 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none focus:border-primary/40" />
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="text-sm font-medium block mb-1.5">GitHub</label>
+              <input type="text" id="pj-github" class="w-full px-4 py-2.5 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none focus:border-primary/40" />
+            </div>
+            <div>
+              <label class="text-sm font-medium block mb-1.5">Demo</label>
+              <input type="text" id="pj-demo" class="w-full px-4 py-2.5 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none focus:border-primary/40" />
+            </div>
+          </div>
+          <div>
+            <label class="text-sm font-medium block mb-1.5">排序（数字越小越靠前）</label>
+            <input type="number" id="pj-sort_order" value="0" class="w-full px-4 py-2.5 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none focus:border-primary/40" />
+          </div>
+          <div class="flex items-center gap-3 pt-2">
+            <button type="submit" id="pj-save" class="px-6 py-2.5 rounded-xl bg-primary/80 text-white text-sm font-medium hover:bg-primary/90 transition-colors">保存</button>
+            <button type="button" id="pj-cancel" class="px-6 py-2.5 rounded-xl border border-border/40 bg-card/50 text-sm font-medium hover:bg-muted/30 transition-colors">取消</button>
+            <span id="pj-loading" class="text-xs text-muted-foreground/60 hidden">保存中...</span>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ===== 名言编辑器 Modal ===== -->
+    <div id="quote-editor-overlay" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4">
+      <div class="bg-card border border-border/40 rounded-2xl w-full max-w-md shadow-2xl">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-border/30">
+          <h2 class="text-lg font-bold">添加名言</h2>
+          <button id="quote-editor-close" class="text-muted-foreground/60 hover:text-primary transition-colors">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
         </div>
+        <form id="quote-editor-form" class="p-6 space-y-4">
+          <div>
+            <label class="text-sm font-medium block mb-1.5">名言内容 *</label>
+            <textarea id="q-text" rows="3" required class="w-full px-4 py-2.5 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none focus:border-primary/40 resize-y"></textarea>
+          </div>
+          <div>
+            <label class="text-sm font-medium block mb-1.5">作者</label>
+            <input type="text" id="q-author" placeholder="Unknown" class="w-full px-4 py-2.5 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none focus:border-primary/40" />
+          </div>
+          <div class="flex items-center gap-3 pt-2">
+            <button type="submit" id="q-save" class="px-6 py-2.5 rounded-xl bg-primary/80 text-white text-sm font-medium hover:bg-primary/90 transition-colors">保存</button>
+            <button type="button" id="q-cancel" class="px-6 py-2.5 rounded-xl border border-border/40 bg-card/50 text-sm font-medium hover:bg-muted/30 transition-colors">取消</button>
+            <span id="q-loading" class="text-xs text-muted-foreground/60 hidden">保存中...</span>
+          </div>
+        </form>
       </div>
     </div>
   </section>
 </BaseLayout>
 
 <script>
-  // ===== 登录验证 =====
+  const PASSWORD_KEY = "admin_password";
+
+  function getAuthHeaders(): Record<string, string> {
+    const pwd = sessionStorage.getItem(PASSWORD_KEY) || "";
+    return { "x-admin-password": pwd };
+  }
+
+  async function apiFetch(url: string, opts: RequestInit = {}): Promise<Response> {
+    const headers = { ...getAuthHeaders(), ...opts.headers };
+    return fetch(url, { ...opts, headers });
+  }
+
+  async function apiGet(url: string) {
+    const res = await apiFetch(url);
+    if (!res.ok) throw new Error(`API error: ${res.status}`);
+    return res.json();
+  }
+
+  async function apiPost(url: string, body: any) {
+    const res = await apiFetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const e = await res.json().catch(() => ({}));
+      throw new Error(e.error || `API error: ${res.status}`);
+    }
+    return res.json();
+  }
+
+  async function apiPut(url: string, body: any) {
+    const res = await apiFetch(url, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const e = await res.json().catch(() => ({}));
+      throw new Error(e.error || `API error: ${res.status}`);
+    }
+    return res.json();
+  }
+
+  async function apiDelete(url: string, body?: any) {
+    const opts: RequestInit = { method: "DELETE" };
+    if (body) {
+      opts.headers = { "Content-Type": "application/json" };
+      opts.body = JSON.stringify(body);
+    }
+    const res = await apiFetch(url, opts);
+    if (!res.ok) {
+      const e = await res.json().catch(() => ({}));
+      throw new Error(e.error || `API error: ${res.status}`);
+    }
+    return res.json();
+  }
+
+  function esc(str: string) {
+    const d = document.createElement("div");
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  // ===== Login =====
   const loginForm = document.getElementById("login-form") as HTMLFormElement;
   const loginPanel = document.getElementById("admin-panel");
   const loginSection = document.getElementById("admin-login");
@@ -374,11 +480,14 @@ const totalWords = published.reduce((sum, p) => sum + (p.body?.split(/\s+/).leng
     loadAllData();
   }
 
-  if (sessionStorage.getItem("admin_auth") === "1") showAdmin();
+  if (sessionStorage.getItem(PASSWORD_KEY)) showAdmin();
 
   loginForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const pwd = (document.getElementById("login-password") as HTMLInputElement).value;
+    const btn = document.getElementById("login-btn") as HTMLButtonElement;
+    btn.textContent = "验证中...";
+    btn.disabled = true;
     try {
       const res = await fetch("/api/admin-verify", {
         method: "POST",
@@ -386,7 +495,7 @@ const totalWords = published.reduce((sum, p) => sum + (p.body?.split(/\s+/).leng
         body: JSON.stringify({ password: pwd }),
       });
       if (res.ok) {
-        sessionStorage.setItem("admin_auth", "1");
+        sessionStorage.setItem(PASSWORD_KEY, pwd);
         showAdmin();
       } else {
         loginError?.classList.remove("hidden");
@@ -395,14 +504,18 @@ const totalWords = published.reduce((sum, p) => sum + (p.body?.split(/\s+/).leng
     } catch {
       loginError?.classList.remove("hidden");
       setTimeout(() => loginError?.classList.add("hidden"), 2000);
+    } finally {
+      btn.textContent = "进入管理面板";
+      btn.disabled = false;
     }
   });
 
-  document.getElementById("login-password")?.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") loginForm?.requestSubmit();
+  document.getElementById("logout-btn")?.addEventListener("click", () => {
+    sessionStorage.removeItem(PASSWORD_KEY);
+    location.reload();
   });
 
-  // ===== 标签页切换 =====
+  // ===== Tab Switching =====
   const tabBtns = document.querySelectorAll<HTMLButtonElement>(".tab-btn");
   const tabPanels = document.querySelectorAll<HTMLElement>(".tab-panel");
 
@@ -416,140 +529,403 @@ const totalWords = published.reduce((sum, p) => sum + (p.body?.split(/\s+/).leng
     });
   });
 
-  // ===== 数据加载 =====
-  function loadAllData() {
-    loadGuestbook();
-    loadSubscribers();
-    loadBookmarks();
-    loadDashboardStats();
-    loadAppearanceState();
-    loadSettings();
+  // ===== Data Loaders =====
+  let allPosts: any[] = [];
+  let allProjects: any[] = [];
+  let allQuotes: any[] = [];
+  let allSettings: Record<string, any> = {};
+
+  async function loadAllData() {
+    await Promise.allSettled([
+      loadPosts(),
+      loadProjects(),
+      loadQuotes(),
+      loadSettings(),
+    ]);
   }
 
-  function loadDashboardStats() {
-    const gb = JSON.parse(localStorage.getItem("guestbook") || "[]");
-    const subs = JSON.parse(localStorage.getItem("subscribers") || "[]");
-    const bm = JSON.parse(localStorage.getItem("bookmarks") || "[]");
+  // ----- Dashboard -----
+  function updateDashboard() {
+    const published = allPosts.filter((p) => !p.draft);
+    const drafts = allPosts.filter((p) => p.draft);
     const el = (id: string) => document.getElementById(id);
-    if (el("stat-guestbook")) el("stat-guestbook")!.textContent = gb.length;
-    if (el("stat-subscribers")) el("stat-subscribers")!.textContent = subs.length;
-    if (el("stat-bookmarks")) el("stat-bookmarks")!.textContent = bm.length;
+    if (el("stat-published")) el("stat-published")!.textContent = String(published.length);
+    if (el("stat-drafts")) el("stat-drafts")!.textContent = String(drafts.length);
+    if (el("stat-projects")) el("stat-projects")!.textContent = String(allProjects.length);
+    if (el("stat-quotes")) el("stat-quotes")!.textContent = String(allQuotes.length);
   }
 
-  // ===== 留言管理 =====
-  function loadGuestbook() {
-    const data: Array<{ name: string; message: string; time: string }> = JSON.parse(localStorage.getItem("guestbook") || "[]");
-    const tbody = document.getElementById("guestbook-tbody");
+  // ----- Posts -----
+  async function loadPosts() {
+    try {
+      allPosts = await apiGet("/api/posts?drafts=true");
+    } catch { allPosts = []; }
+    renderPosts();
+    updateDashboard();
+  }
+
+  function renderPosts() {
+    const tbody = document.getElementById("posts-tbody");
     if (!tbody) return;
-    if (!data.length) { tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-8 text-center text-sm text-muted-foreground/40">暂无留言</td></tr>'; return; }
-    tbody.innerHTML = data.map((m, i) => `
-      <tr class="border-b border-border/30 hover:bg-muted/20 transition-colors">
-        <td class="px-4 py-3 font-medium">${escapeHtml(m.name)}</td>
-        <td class="px-4 py-3 text-muted-foreground/70 line-clamp-2">${escapeHtml(m.message)}</td>
-        <td class="px-4 py-3 text-xs text-muted-foreground/60 hidden md:table-cell">${m.time ? new Date(m.time).toLocaleString("zh-CN") : "-"}</td>
-        <td class="px-4 py-3 text-right"><button class="text-xs text-red-500 hover:text-red-600 gb-del" data-index="${i}">删除</button></td>
-      </tr>
-    `).join("");
-    tbody.querySelectorAll(".gb-del").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const idx = parseInt((btn as HTMLElement).dataset.index || "0");
-        data.splice(idx, 1);
-        localStorage.setItem("guestbook", JSON.stringify(data));
-        loadGuestbook();
-        loadDashboardStats();
-      });
+    const q = (document.getElementById("post-search") as HTMLInputElement)?.value?.toLowerCase() || "";
+    const statusFilter = (document.getElementById("post-status-filter") as HTMLSelectElement)?.value || "";
+
+    let filtered = allPosts.filter((p) => {
+      if (q && !p.title?.toLowerCase().includes(q)) return false;
+      if (statusFilter === "published" && p.draft) return false;
+      if (statusFilter === "draft" && !p.draft) return false;
+      return true;
+    });
+
+    if (!filtered.length) {
+      tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-sm text-muted-foreground/40">暂无文章</td></tr>';
+    } else {
+      tbody.innerHTML = filtered.map((p) => `
+        <tr class="border-b border-border/30 hover:bg-muted/20 transition-colors">
+          <td class="px-4 py-3"><span class="line-clamp-1">${esc(p.title || "")}</span></td>
+          <td class="px-4 py-3 hidden sm:table-cell"><span class="text-xs px-2 py-0.5 rounded-full bg-primary/8 text-primary/80">${esc(p.category || "未分类")}</span></td>
+          <td class="px-4 py-3 hidden md:table-cell"><span class="text-xs px-2 py-0.5 rounded-full ${p.draft ? "bg-orange-400/10 text-orange-400" : "bg-emerald-500/10 text-emerald-500"}">${p.draft ? "草稿" : "已发布"}</span></td>
+          <td class="px-4 py-3 text-xs text-muted-foreground/60 hidden md:table-cell">${p.created_at ? new Date(p.created_at).toLocaleDateString("zh-CN") : "-"}</td>
+          <td class="px-4 py-3 text-right space-x-2">
+            <button class="text-xs text-primary hover:text-primary/80 transition-colors post-edit" data-id="${p.id}">编辑</button>
+            <button class="text-xs text-red-500 hover:text-red-600 transition-colors post-del" data-id="${p.id}">删除</button>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    document.getElementById("post-count").textContent = `共 ${allPosts.length} 篇文章，${allPosts.filter((p) => p.draft).length} 篇草稿`;
+
+    tbody.querySelectorAll(".post-edit").forEach((btn) => {
+      btn.addEventListener("click", () => editPost((btn as HTMLElement).dataset.id!));
+    });
+    tbody.querySelectorAll(".post-del").forEach((btn) => {
+      btn.addEventListener("click", () => deletePost((btn as HTMLElement).dataset.id!));
     });
   }
 
-  document.getElementById("export-guestbook")?.addEventListener("click", () => {
-    downloadJSON(JSON.parse(localStorage.getItem("guestbook") || "[]"), "guestbook.json");
-  });
-  document.getElementById("clear-guestbook")?.addEventListener("click", () => {
-    if (confirm("确定清空所有留言？")) { localStorage.removeItem("guestbook"); loadGuestbook(); loadDashboardStats(); }
+  document.getElementById("post-search")?.addEventListener("input", renderPosts);
+  document.getElementById("post-status-filter")?.addEventListener("change", renderPosts);
+
+  function openPostEditor(data?: any) {
+    const overlay = document.getElementById("post-editor-overlay")!;
+    overlay.classList.remove("hidden");
+    overlay.classList.add("flex");
+    document.getElementById("post-editor-title")!.textContent = data ? "编辑文章" : "新建文章";
+    (document.getElementById("pe-id") as HTMLInputElement).value = data?.id || "";
+    (document.getElementById("pe-title") as HTMLInputElement).value = data?.title || "";
+    (document.getElementById("pe-description") as HTMLInputElement).value = data?.description || "";
+    (document.getElementById("pe-category") as HTMLInputElement).value = data?.category || "";
+    (document.getElementById("pe-tags") as HTMLInputElement).value = Array.isArray(data?.tags) ? data.tags.join(", ") : (data?.tags || "");
+    (document.getElementById("pe-body") as HTMLTextAreaElement).value = data?.body || "";
+    (document.getElementById("pe-draft") as HTMLInputElement).checked = data?.draft ?? true;
+  }
+
+  function closePostEditor() {
+    const overlay = document.getElementById("post-editor-overlay")!;
+    overlay.classList.add("hidden");
+    overlay.classList.remove("flex");
+  }
+
+  async function editPost(id: string) {
+    try {
+      const post = await apiGet(`/api/posts/${id}`);
+      openPostEditor(post);
+    } catch (e: any) { alert("加载失败: " + e.message); }
+  }
+
+  async function deletePost(id: string) {
+    if (!confirm("确定删除此文章？")) return;
+    try {
+      await apiDelete(`/api/posts/${id}`);
+      await loadPosts();
+    } catch (e: any) { alert("删除失败: " + e.message); }
+  }
+
+  document.getElementById("btn-new-post")?.addEventListener("click", () => openPostEditor());
+  document.getElementById("post-editor-close")?.addEventListener("click", closePostEditor);
+  document.getElementById("pe-cancel")?.addEventListener("click", closePostEditor);
+
+  document.getElementById("post-editor-overlay")?.addEventListener("click", (e) => {
+    if (e.target === e.currentTarget) closePostEditor();
   });
 
-  // ===== 订阅管理 =====
-  function loadSubscribers() {
-    const data: Array<{ email: string; time: string }> = JSON.parse(localStorage.getItem("subscribers") || "[]");
-    const tbody = document.getElementById("subscribers-tbody");
+  document.getElementById("post-editor-form")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const id = (document.getElementById("pe-id") as HTMLInputElement).value;
+    const tagsStr = (document.getElementById("pe-tags") as HTMLInputElement).value;
+    const payload = {
+      title: (document.getElementById("pe-title") as HTMLInputElement).value,
+      description: (document.getElementById("pe-description") as HTMLInputElement).value,
+      category: (document.getElementById("pe-category") as HTMLInputElement).value || "未分类",
+      tags: tagsStr ? tagsStr.split(",").map((t: string) => t.trim()).filter(Boolean) : [],
+      body: (document.getElementById("pe-body") as HTMLTextAreaElement).value,
+      draft: (document.getElementById("pe-draft") as HTMLInputElement).checked,
+    };
+
+    const saveBtn = document.getElementById("pe-save") as HTMLButtonElement;
+    const loading = document.getElementById("pe-loading")!;
+    saveBtn.disabled = true;
+    loading.classList.remove("hidden");
+    try {
+      if (id) {
+        await apiPut(`/api/posts/${id}`, payload);
+      } else {
+        await apiPost("/api/posts", payload);
+      }
+      closePostEditor();
+      await loadPosts();
+    } catch (e: any) {
+      alert("保存失败: " + e.message);
+    } finally {
+      saveBtn.disabled = false;
+      loading.classList.add("hidden");
+    }
+  });
+
+  // ----- Projects -----
+  async function loadProjects() {
+    try {
+      allProjects = await apiGet("/api/projects");
+    } catch { allProjects = []; }
+    renderProjects();
+    updateDashboard();
+  }
+
+  function renderProjects() {
+    const tbody = document.getElementById("projects-tbody");
     if (!tbody) return;
-    if (!data.length) { tbody.innerHTML = '<tr><td colspan="3" class="px-4 py-8 text-center text-sm text-muted-foreground/40">暂无订阅</td></tr>'; return; }
-    tbody.innerHTML = data.map((s, i) => `
-      <tr class="border-b border-border/30 hover:bg-muted/20 transition-colors">
-        <td class="px-4 py-3">${escapeHtml(s.email)}</td>
-        <td class="px-4 py-3 text-xs text-muted-foreground/60 hidden md:table-cell">${s.time ? new Date(s.time).toLocaleString("zh-CN") : "-"}</td>
-        <td class="px-4 py-3 text-right"><button class="text-xs text-red-500 hover:text-red-600 sub-del" data-index="${i}">删除</button></td>
-      </tr>
-    `).join("");
-    tbody.querySelectorAll(".sub-del").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const idx = parseInt((btn as HTMLElement).dataset.index || "0");
-        data.splice(idx, 1);
-        localStorage.setItem("subscribers", JSON.stringify(data));
-        loadSubscribers();
-        loadDashboardStats();
-      });
+    const q = (document.getElementById("project-search") as HTMLInputElement)?.value?.toLowerCase() || "";
+    const filtered = allProjects.filter((p) => !q || p.name?.toLowerCase().includes(q));
+
+    if (!filtered.length) {
+      tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-8 text-center text-sm text-muted-foreground/40">暂无项目</td></tr>';
+    } else {
+      tbody.innerHTML = filtered.map((p) => `
+        <tr class="border-b border-border/30 hover:bg-muted/20 transition-colors">
+          <td class="px-4 py-3 font-medium">${esc(p.name || "")}</td>
+          <td class="px-4 py-3 hidden sm:table-cell"><div class="flex flex-wrap gap-1">${(Array.isArray(p.tech_stack) ? p.tech_stack : []).map((t: string) => `<span class="text-[10px] px-1.5 py-0.5 rounded bg-muted/50 text-muted-foreground/60">${esc(t)}</span>`).join("")}</div></td>
+          <td class="px-4 py-3 hidden md:table-cell text-xs text-muted-foreground/60 truncate max-w-[200px]">${p.github ? `<a href="${esc(p.github)}" target="_blank" class="hover:text-primary transition-colors">${esc(p.github)}</a>` : "-"}</td>
+          <td class="px-4 py-3 text-right space-x-2">
+            <button class="text-xs text-primary hover:text-primary/80 transition-colors proj-edit" data-id="${p.id}">编辑</button>
+            <button class="text-xs text-red-500 hover:text-red-600 transition-colors proj-del" data-id="${p.id}">删除</button>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    tbody.querySelectorAll(".proj-edit").forEach((btn) => {
+      btn.addEventListener("click", () => editProject((btn as HTMLElement).dataset.id!));
+    });
+    tbody.querySelectorAll(".proj-del").forEach((btn) => {
+      btn.addEventListener("click", () => deleteProject((btn as HTMLElement).dataset.id!));
     });
   }
 
-  document.getElementById("export-subscribers")?.addEventListener("click", () => {
-    downloadJSON(JSON.parse(localStorage.getItem("subscribers") || "[]"), "subscribers.json");
-  });
-  document.getElementById("clear-subscribers")?.addEventListener("click", () => {
-    if (confirm("确定清空所有订阅？")) { localStorage.removeItem("subscribers"); loadSubscribers(); loadDashboardStats(); }
+  document.getElementById("project-search")?.addEventListener("input", renderProjects);
+
+  function openProjectEditor(data?: any) {
+    const overlay = document.getElementById("project-editor-overlay")!;
+    overlay.classList.remove("hidden");
+    overlay.classList.add("flex");
+    document.getElementById("project-editor-title")!.textContent = data ? "编辑项目" : "新建项目";
+    (document.getElementById("pj-id") as HTMLInputElement).value = data?.id || "";
+    (document.getElementById("pj-name") as HTMLInputElement).value = data?.name || "";
+    (document.getElementById("pj-description") as HTMLTextAreaElement).value = data?.description || "";
+    (document.getElementById("pj-tech_stack") as HTMLInputElement).value = Array.isArray(data?.tech_stack) ? data.tech_stack.join(", ") : (data?.tech_stack || "");
+    (document.getElementById("pj-github") as HTMLInputElement).value = data?.github || "";
+    (document.getElementById("pj-demo") as HTMLInputElement).value = data?.demo || "";
+    (document.getElementById("pj-sort_order") as HTMLInputElement).value = String(data?.sort_order ?? 0);
+  }
+
+  function closeProjectEditor() {
+    const overlay = document.getElementById("project-editor-overlay")!;
+    overlay.classList.add("hidden");
+    overlay.classList.remove("flex");
+  }
+
+  async function editProject(id: string) {
+    const p = allProjects.find((x) => x.id === id);
+    if (p) openProjectEditor(p);
+  }
+
+  async function deleteProject(id: string) {
+    if (!confirm("确定删除此项目？")) return;
+    try {
+      await apiDelete(`/api/projects/${id}`);
+      await loadProjects();
+    } catch (e: any) { alert("删除失败: " + e.message); }
+  }
+
+  document.getElementById("btn-new-project")?.addEventListener("click", () => openProjectEditor());
+  document.getElementById("project-editor-close")?.addEventListener("click", closeProjectEditor);
+  document.getElementById("pj-cancel")?.addEventListener("click", closeProjectEditor);
+
+  document.getElementById("project-editor-overlay")?.addEventListener("click", (e) => {
+    if (e.target === e.currentTarget) closeProjectEditor();
   });
 
-  // ===== 收藏管理 =====
-  function loadBookmarks() {
-    const data: Array<{ title: string; url: string; time: string }> = JSON.parse(localStorage.getItem("bookmarks") || "[]");
-    const tbody = document.getElementById("bookmarks-tbody");
+  document.getElementById("project-editor-form")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const id = (document.getElementById("pj-id") as HTMLInputElement).value;
+    const techStr = (document.getElementById("pj-tech_stack") as HTMLInputElement).value;
+    const payload = {
+      name: (document.getElementById("pj-name") as HTMLInputElement).value,
+      description: (document.getElementById("pj-description") as HTMLTextAreaElement).value,
+      tech_stack: techStr ? techStr.split(",").map((t: string) => t.trim()).filter(Boolean) : [],
+      github: (document.getElementById("pj-github") as HTMLInputElement).value || null,
+      demo: (document.getElementById("pj-demo") as HTMLInputElement).value || null,
+      sort_order: parseInt((document.getElementById("pj-sort_order") as HTMLInputElement).value) || 0,
+    };
+
+    const saveBtn = document.getElementById("pj-save") as HTMLButtonElement;
+    const loading = document.getElementById("pj-loading")!;
+    saveBtn.disabled = true;
+    loading.classList.remove("hidden");
+    try {
+      if (id) {
+        await apiPut(`/api/projects/${id}`, payload);
+      } else {
+        await apiPost("/api/projects", payload);
+      }
+      closeProjectEditor();
+      await loadProjects();
+    } catch (e: any) {
+      alert("保存失败: " + e.message);
+    } finally {
+      saveBtn.disabled = false;
+      loading.classList.add("hidden");
+    }
+  });
+
+  // ----- Quotes -----
+  async function loadQuotes() {
+    try {
+      allQuotes = await apiGet("/api/quotes");
+    } catch { allQuotes = []; }
+    renderQuotes();
+    updateDashboard();
+  }
+
+  function renderQuotes() {
+    const tbody = document.getElementById("quotes-tbody");
     if (!tbody) return;
-    if (!data.length) { tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-8 text-center text-sm text-muted-foreground/40">暂无收藏</td></tr>'; return; }
-    tbody.innerHTML = data.map((b, i) => `
-      <tr class="border-b border-border/30 hover:bg-muted/20 transition-colors">
-        <td class="px-4 py-3"><a href="${escapeHtml(b.url)}" target="_blank" class="hover:text-primary transition-colors line-clamp-1">${escapeHtml(b.title)}</a></td>
-        <td class="px-4 py-3 text-xs text-muted-foreground/60 hidden md:table-cell truncate max-w-[200px]">${escapeHtml(b.url)}</td>
-        <td class="px-4 py-3 text-xs text-muted-foreground/60 hidden md:table-cell">${b.time ? new Date(b.time).toLocaleString("zh-CN") : "-"}</td>
-        <td class="px-4 py-3 text-right"><button class="text-xs text-red-500 hover:text-red-600 bm-del" data-index="${i}">删除</button></td>
-      </tr>
-    `).join("");
-    tbody.querySelectorAll(".bm-del").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const idx = parseInt((btn as HTMLElement).dataset.index || "0");
-        data.splice(idx, 1);
-        localStorage.setItem("bookmarks", JSON.stringify(data));
-        loadBookmarks();
-        loadDashboardStats();
-      });
+    const q = (document.getElementById("quote-search") as HTMLInputElement)?.value?.toLowerCase() || "";
+    const filtered = allQuotes.filter((x) => !q || x.text?.toLowerCase().includes(q) || x.author?.toLowerCase().includes(q));
+
+    if (!filtered.length) {
+      tbody.innerHTML = '<tr><td colspan="3" class="px-4 py-8 text-center text-sm text-muted-foreground/40">暂无名言</td></tr>';
+    } else {
+      tbody.innerHTML = filtered.map((x) => `
+        <tr class="border-b border-border/30 hover:bg-muted/20 transition-colors">
+          <td class="px-4 py-3 line-clamp-2">${esc(x.text || "")}</td>
+          <td class="px-4 py-3 text-xs text-muted-foreground/60 hidden sm:table-cell">${esc(x.author || "Unknown")}</td>
+          <td class="px-4 py-3 text-right"><button class="text-xs text-red-500 hover:text-red-600 transition-colors quote-del" data-id="${x.id}">删除</button></td>
+        </tr>
+      `).join("");
+    }
+
+    tbody.querySelectorAll(".quote-del").forEach((btn) => {
+      btn.addEventListener("click", () => deleteQuote((btn as HTMLElement).dataset.id!));
     });
   }
 
-  document.getElementById("export-bookmarks")?.addEventListener("click", () => {
-    downloadJSON(JSON.parse(localStorage.getItem("bookmarks") || "[]"), "bookmarks.json");
-  });
-  document.getElementById("clear-bookmarks")?.addEventListener("click", () => {
-    if (confirm("确定清空所有收藏？")) { localStorage.removeItem("bookmarks"); loadBookmarks(); loadDashboardStats(); }
-  });
+  document.getElementById("quote-search")?.addEventListener("input", renderQuotes);
 
-  // ===== 文章搜索/筛选 =====
-  document.getElementById("post-search")?.addEventListener("input", filterPosts);
-  document.getElementById("post-category-filter")?.addEventListener("change", filterPosts);
-
-  function filterPosts() {
-    const q = (document.getElementById("post-search") as HTMLInputElement)?.value.toLowerCase() || "";
-    const cat = (document.getElementById("post-category-filter") as HTMLSelectElement)?.value || "";
-    let count = 0;
-    document.querySelectorAll(".post-row").forEach((row) => {
-      const el = row as HTMLElement;
-      const match = el.dataset.title!.includes(q) && (!cat || el.dataset.category === cat);
-      el.style.display = match ? "" : "none";
-      if (match) count++;
-    });
-    const el = document.getElementById("post-count");
-    if (el) el.textContent = `显示 ${count} 篇文章`;
+  function openQuoteEditor() {
+    const overlay = document.getElementById("quote-editor-overlay")!;
+    overlay.classList.remove("hidden");
+    overlay.classList.add("flex");
+    (document.getElementById("q-text") as HTMLTextAreaElement).value = "";
+    (document.getElementById("q-author") as HTMLInputElement).value = "";
   }
 
-  // ===== 插件开关 =====
+  function closeQuoteEditor() {
+    const overlay = document.getElementById("quote-editor-overlay")!;
+    overlay.classList.add("hidden");
+    overlay.classList.remove("flex");
+  }
+
+  async function deleteQuote(id: string) {
+    if (!confirm("确定删除此名言？")) return;
+    try {
+      await apiDelete("/api/quotes", { id });
+      await loadQuotes();
+    } catch (e: any) { alert("删除失败: " + e.message); }
+  }
+
+  document.getElementById("btn-new-quote")?.addEventListener("click", openQuoteEditor);
+  document.getElementById("quote-editor-close")?.addEventListener("click", closeQuoteEditor);
+  document.getElementById("q-cancel")?.addEventListener("click", closeQuoteEditor);
+
+  document.getElementById("quote-editor-overlay")?.addEventListener("click", (e) => {
+    if (e.target === e.currentTarget) closeQuoteEditor();
+  });
+
+  document.getElementById("quote-editor-form")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const payload = {
+      text: (document.getElementById("q-text") as HTMLTextAreaElement).value,
+      author: (document.getElementById("q-author") as HTMLInputElement).value || "Unknown",
+    };
+
+    const saveBtn = document.getElementById("q-save") as HTMLButtonElement;
+    const loading = document.getElementById("q-loading")!;
+    saveBtn.disabled = true;
+    loading.classList.remove("hidden");
+    try {
+      await apiPost("/api/quotes", payload);
+      closeQuoteEditor();
+      await loadQuotes();
+    } catch (e: any) {
+      alert("保存失败: " + e.message);
+    } finally {
+      saveBtn.disabled = false;
+      loading.classList.add("hidden");
+    }
+  });
+
+  // ----- Settings -----
+  const SETTINGS_KEYS = [
+    "site_title", "site_description", "site_tagline",
+    "avatar_url", "hero_title", "hero_subtitle", "hero_tagline", "hero_tech_stack",
+    "about_bio", "about_tech_stack",
+    "footer_email", "github_url", "twitter_url",
+  ];
+
+  async function loadSettings() {
+    try {
+      allSettings = await apiGet("/api/settings");
+    } catch { allSettings = {}; }
+    for (const key of SETTINGS_KEYS) {
+      const el = document.getElementById(`set-${key}`) as HTMLInputElement | HTMLTextAreaElement;
+      if (el) el.value = allSettings[key] || "";
+    }
+  }
+
+  document.getElementById("save-settings")?.addEventListener("click", async () => {
+    const payload: Record<string, string> = {};
+    for (const key of SETTINGS_KEYS) {
+      const el = document.getElementById(`set-${key}`) as HTMLInputElement | HTMLTextAreaElement;
+      if (el) payload[key] = el.value;
+    }
+    const btn = document.getElementById("save-settings") as HTMLButtonElement;
+    btn.textContent = "保存中...";
+    btn.disabled = true;
+    try {
+      await apiPut("/api/settings", payload);
+      const msg = document.getElementById("settings-saved")!;
+      msg.classList.remove("hidden");
+      setTimeout(() => msg.classList.add("hidden"), 2000);
+    } catch (e: any) {
+      alert("保存失败: " + e.message);
+    } finally {
+      btn.textContent = "保存设置";
+      btn.disabled = false;
+    }
+  });
+
+  // ===== Plugins (localStorage) =====
   document.querySelectorAll<HTMLInputElement>(".plugin-toggle input").forEach((toggle) => {
     const plugin = toggle.dataset.plugin || "";
     const stored = localStorage.getItem(`plugin_${plugin}`);
@@ -576,11 +952,11 @@ const totalWords = published.reduce((sum, p) => sum + (p.body?.split(/\s+/).leng
 
   if (localStorage.getItem("plugin_liteMode") === "on") document.documentElement.classList.add("lite-mode");
 
-  // ===== 主题外观 =====
+  // ===== Appearance (localStorage) =====
   function loadAppearanceState() {
     const theme = localStorage.getItem("theme") || "dark";
     const el = document.getElementById("current-theme");
-    if (el) el.textContent = { light: "日间暖光", dark: "极客蓝", "deep-blue": "深夜蓝", "eye-green": "护眼绿" }[theme] || theme;
+    if (el) el.textContent = ({ light: "日间暖光", dark: "极客蓝", "deep-blue": "深夜蓝", "eye-green": "护眼绿" } as Record<string, string>)[theme] || theme;
     const fs = document.getElementById("current-font");
     if (fs) fs.textContent = document.documentElement.classList.contains("large-font") ? "大字号" : "标准";
     const lite = document.getElementById("current-lite");
@@ -607,77 +983,5 @@ const totalWords = published.reduce((sum, p) => sum + (p.body?.split(/\s+/).leng
     loadAppearanceState();
   });
 
-  // ===== 站点设置 =====
-  function loadSettings() {
-    const s = JSON.parse(localStorage.getItem("site_settings") || "{}");
-    const t = document.getElementById("site-title") as HTMLInputElement;
-    const d = document.getElementById("site-desc") as HTMLInputElement;
-    const p = document.getElementById("page-size") as HTMLInputElement;
-    const wc = document.getElementById("show-wordcount") as HTMLInputElement;
-    const rt = document.getElementById("show-readingtime") as HTMLInputElement;
-    if (t) t.value = s.title || "";
-    if (d) d.value = s.desc || "";
-    if (p) p.value = s.pageSize || "6";
-    if (wc) wc.checked = s.showWordcount !== false;
-    if (rt) rt.checked = s.showReadingtime !== false;
-  }
-
-  document.getElementById("save-settings")?.addEventListener("click", () => {
-    const settings = {
-      title: (document.getElementById("site-title") as HTMLInputElement)?.value,
-      desc: (document.getElementById("site-desc") as HTMLInputElement)?.value,
-      pageSize: (document.getElementById("page-size") as HTMLInputElement)?.value,
-      showWordcount: (document.getElementById("show-wordcount") as HTMLInputElement)?.checked,
-      showReadingtime: (document.getElementById("show-readingtime") as HTMLInputElement)?.checked,
-    };
-    localStorage.setItem("site_settings", JSON.stringify(settings));
-    const msg = document.getElementById("settings-saved");
-    msg?.classList.remove("hidden");
-    setTimeout(() => msg?.classList.add("hidden"), 2000);
-  });
-
-  // ===== 数据管理 =====
-  function exportAll() {
-    const data = {
-      guestbook: JSON.parse(localStorage.getItem("guestbook") || "[]"),
-      subscribers: JSON.parse(localStorage.getItem("subscribers") || "[]"),
-      bookmarks: JSON.parse(localStorage.getItem("bookmarks") || "[]"),
-      settings: JSON.parse(localStorage.getItem("site_settings") || "{}"),
-      plugins: Object.fromEntries(Object.entries(localStorage).filter(([k]) => k.startsWith("plugin_"))),
-      exportedAt: new Date().toISOString(),
-    };
-    downloadJSON(data, "blog-all-data.json");
-  }
-
-  document.getElementById("export-all")?.addEventListener("click", exportAll);
-  document.getElementById("export-guestbook-2")?.addEventListener("click", () => downloadJSON(JSON.parse(localStorage.getItem("guestbook") || "[]"), "guestbook.json"));
-  document.getElementById("export-subscribers-2")?.addEventListener("click", () => downloadJSON(JSON.parse(localStorage.getItem("subscribers") || "[]"), "subscribers.json"));
-  document.getElementById("export-bookmarks-2")?.addEventListener("click", () => downloadJSON(JSON.parse(localStorage.getItem("bookmarks") || "[]"), "bookmarks.json"));
-
-  document.getElementById("clear-guestbook-2")?.addEventListener("click", () => { if (confirm("确定清空？")) { localStorage.removeItem("guestbook"); loadGuestbook(); loadDashboardStats(); } });
-  document.getElementById("clear-subscribers-2")?.addEventListener("click", () => { if (confirm("确定清空？")) { localStorage.removeItem("subscribers"); loadSubscribers(); loadDashboardStats(); } });
-  document.getElementById("clear-bookmarks-2")?.addEventListener("click", () => { if (confirm("确定清空？")) { localStorage.removeItem("bookmarks"); loadBookmarks(); loadDashboardStats(); } });
-  document.getElementById("clear-all-data")?.addEventListener("click", () => {
-    if (confirm("确定清除所有本地数据？此操作不可恢复！")) {
-      ["bookmarks", "guestbook", "subscribers", "theme", "site_settings"].forEach((k) => localStorage.removeItem(k));
-      Object.keys(localStorage).filter((k) => k.startsWith("plugin_")).forEach((k) => localStorage.removeItem(k));
-      alert("已清除");
-      loadAllData();
-    }
-  });
-
-  // ===== 工具函数 =====
-  function downloadJSON(data: any, filename: string) {
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = filename; a.click();
-    URL.revokeObjectURL(url);
-  }
-
-  function escapeHtml(str: string) {
-    const div = document.createElement("div");
-    div.textContent = str;
-    return div.innerHTML;
-  }
+  loadAppearanceState();
 </script>
