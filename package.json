@@ -10,9 +10,9 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@astrojs/cloudflare": "^12.6.13",
     "@astrojs/react": "^4.4.2",
     "@astrojs/tailwind": "^5.1.4",
-    "@astrojs/vercel": "^8.2.11",
     "@radix-ui/react-slot": "^1.1.1",
     "@supabase/supabase-js": "^2.110.7",
     "@tailwindcss/typography": "^0.5.16",
