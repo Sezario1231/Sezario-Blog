@@ -4,63 +4,122 @@ import { getCollection } from "astro:content";
 
 const allPosts = await getCollection("posts");
 const published = allPosts.filter((p) => !p.data.draft);
+const drafts = allPosts.filter((p) => p.data.draft);
 const categories = [...new Set(published.map((p) => p.data.category))];
 const allTags = [...new Set(published.flatMap((p) => p.data.tags))];
 const totalWords = published.reduce((sum, p) => sum + (p.body?.split(/\s+/).length || 0), 0);
 ---
 
 <BaseLayout title="后台管理 - Sezario." description="博客管理面板">
-  <section class="container max-w-5xl mx-auto px-5 md:px-8 py-16 md:py-24">
-    <div class="mb-10" data-animate>
+  <!-- 登录界面 -->
+  <section id="admin-login" class="container max-w-sm mx-auto px-5 py-32">
+    <div class="text-center mb-8">
+      <svg class="w-12 h-12 mx-auto text-primary/60 mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+      <h1 class="text-2xl font-bold mb-1">后台管理</h1>
+      <p class="text-sm text-muted-foreground/60">请输入密码访问</p>
+    </div>
+    <form id="login-form" class="space-y-4">
+      <input type="password" id="login-password" placeholder="输入管理密码"
+        class="w-full px-4 py-3 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none focus:border-primary/40 transition-colors"
+        autocomplete="current-password" />
+      <p id="login-error" class="text-xs text-red-500 hidden">密码错误，请重试</p>
+      <button type="submit" class="w-full px-4 py-3 rounded-xl bg-primary/80 text-white text-sm font-medium hover:bg-primary/90 transition-colors">
+        进入管理面板
+      </button>
+    </form>
+  </section>
+
+  <!-- 管理面板 -->
+  <section id="admin-panel" class="container max-w-6xl mx-auto px-5 md:px-8 py-12 md:py-16 hidden">
+    <div class="mb-8">
       <h1 class="text-3xl md:text-4xl font-bold tracking-tight mb-2">后台管理</h1>
-      <p class="text-sm text-muted-foreground/60">管理文章、查看数据、配置插件</p>
+      <p class="text-sm text-muted-foreground/60">管理站点内容、外观和数据</p>
+    </div>
+
+    <!-- 标签导航 -->
+    <div class="flex gap-1 mb-8 overflow-x-auto pb-2 border-b border-border/30" id="admin-tabs">
+      <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap bg-primary/10 text-primary" data-tab="dashboard">数据看板</button>
+      <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap text-muted-foreground/60 hover:bg-muted/30" data-tab="posts">文章管理</button>
+      <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap text-muted-foreground/60 hover:bg-muted/30" data-tab="guestbook">留言管理</button>
+      <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap text-muted-foreground/60 hover:bg-muted/30" data-tab="subscribers">订阅管理</button>
+      <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap text-muted-foreground/60 hover:bg-muted/30" data-tab="bookmarks">收藏管理</button>
+      <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap text-muted-foreground/60 hover:bg-muted/30" data-tab="plugins">插件管理</button>
+      <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap text-muted-foreground/60 hover:bg-muted/30" data-tab="appearance">主题外观</button>
+      <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap text-muted-foreground/60 hover:bg-muted/30" data-tab="settings">站点设置</button>
+      <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap text-muted-foreground/60 hover:bg-muted/30" data-tab="data">数据管理</button>
     </div>
 
     <!-- 数据看板 -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10" data-animate>
-      <div class="p-5 rounded-xl border border-border/40 bg-card/50">
-        <p class="text-xs text-muted-foreground/60 mb-1">文章总数</p>
-        <p class="text-2xl font-bold text-primary">{published.length}</p>
+    <div class="tab-panel" id="panel-dashboard">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div class="p-5 rounded-xl border border-border/40 bg-card/50">
+          <p class="text-xs text-muted-foreground/60 mb-1">已发布文章</p>
+          <p class="text-2xl font-bold text-primary">{published.length}</p>
+        </div>
+        <div class="p-5 rounded-xl border border-border/40 bg-card/50">
+          <p class="text-xs text-muted-foreground/60 mb-1">草稿</p>
+          <p class="text-2xl font-bold text-orange-400">{drafts.length}</p>
+        </div>
+        <div class="p-5 rounded-xl border border-border/40 bg-card/50">
+          <p class="text-xs text-muted-foreground/60 mb-1">总字数</p>
+          <p class="text-2xl font-bold text-primary">{totalWords.toLocaleString()}</p>
+        </div>
+        <div class="p-5 rounded-xl border border-border/40 bg-card/50">
+          <p class="text-xs text-muted-foreground/60 mb-1">分类 / 标签</p>
+          <p class="text-2xl font-bold text-primary">{categories.length} / {allTags.length}</p>
+        </div>
       </div>
-      <div class="p-5 rounded-xl border border-border/40 bg-card/50">
-        <p class="text-xs text-muted-foreground/60 mb-1">总字数</p>
-        <p class="text-2xl font-bold text-primary">{totalWords.toLocaleString()}</p>
-      </div>
-      <div class="p-5 rounded-xl border border-border/40 bg-card/50">
-        <p class="text-xs text-muted-foreground/60 mb-1">分类数</p>
-        <p class="text-2xl font-bold text-primary">{categories.length}</p>
-      </div>
-      <div class="p-5 rounded-xl border border-border/40 bg-card/50">
-        <p class="text-xs text-muted-foreground/60 mb-1">标签数</p>
-        <p class="text-2xl font-bold text-primary">{allTags.length}</p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="p-5 rounded-xl border border-border/40 bg-card/50">
+          <p class="text-xs text-muted-foreground/60 mb-1">留言数</p>
+          <p class="text-2xl font-bold text-emerald-500" id="stat-guestbook">0</p>
+        </div>
+        <div class="p-5 rounded-xl border border-border/40 bg-card/50">
+          <p class="text-xs text-muted-foreground/60 mb-1">订阅者</p>
+          <p class="text-2xl font-bold text-blue-500" id="stat-subscribers">0</p>
+        </div>
+        <div class="p-5 rounded-xl border border-border/40 bg-card/50">
+          <p class="text-xs text-muted-foreground/60 mb-1">收藏数</p>
+          <p class="text-2xl font-bold text-yellow-500" id="stat-bookmarks">0</p>
+        </div>
       </div>
     </div>
 
     <!-- 文章管理 -->
-    <div class="mb-10" data-animate>
-      <h2 class="text-lg font-semibold mb-4">文章管理</h2>
+    <div class="tab-panel hidden" id="panel-posts">
+      <div class="flex items-center gap-3 mb-4">
+        <input type="text" id="post-search" placeholder="搜索文章标题..." class="flex-1 px-4 py-2 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none focus:border-primary/40" />
+        <select id="post-category-filter" class="px-3 py-2 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none">
+          <option value="">全部分类</option>
+          {categories.map((c) => <option value={c}>{c}</option>)}
+        </select>
+      </div>
       <div class="border border-border/40 rounded-xl overflow-hidden">
         <table class="w-full text-sm">
           <thead>
             <tr class="bg-muted/30 border-b border-border/40">
               <th class="text-left px-4 py-3 font-medium text-muted-foreground/70">标题</th>
               <th class="text-left px-4 py-3 font-medium text-muted-foreground/70 hidden sm:table-cell">分类</th>
+              <th class="text-left px-4 py-3 font-medium text-muted-foreground/70 hidden md:table-cell">标签</th>
               <th class="text-left px-4 py-3 font-medium text-muted-foreground/70 hidden md:table-cell">日期</th>
               <th class="text-right px-4 py-3 font-medium text-muted-foreground/70">操作</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody id="posts-tbody">
             {published.map((post) => (
-              <tr class="border-b border-border/30 hover:bg-muted/20 transition-colors">
+              <tr class="border-b border-border/30 hover:bg-muted/20 transition-colors post-row" data-title={post.data.title.toLowerCase()} data-category={post.data.category}>
                 <td class="px-4 py-3">
                   <a href={`/posts/${post.slug}`} class="hover:text-primary transition-colors line-clamp-1">{post.data.title}</a>
                 </td>
                 <td class="px-4 py-3 hidden sm:table-cell">
                   <span class="text-xs px-2 py-0.5 rounded-full bg-primary/8 text-primary/80">{post.data.category}</span>
                 </td>
-                <td class="px-4 py-3 text-xs text-muted-foreground/60 hidden md:table-cell">
-                  {post.data.date.toLocaleDateString("zh-CN")}
+                <td class="px-4 py-3 hidden md:table-cell">
+                  <div class="flex flex-wrap gap-1">{post.data.tags.map((t) => <span class="text-[10px] px-1.5 py-0.5 rounded bg-muted/50 text-muted-foreground/60">{t}</span>)}</div>
                 </td>
+                <td class="px-4 py-3 text-xs text-muted-foreground/60 hidden md:table-cell">{post.data.date.toLocaleDateString("zh-CN")}</td>
                 <td class="px-4 py-3 text-right">
                   <a href={`/posts/${post.slug}`} class="text-xs text-muted-foreground/60 hover:text-primary transition-colors">查看</a>
                 </td>
@@ -69,82 +128,100 @@ const totalWords = published.reduce((sum, p) => sum + (p.body?.split(/\s+/).leng
           </tbody>
         </table>
       </div>
+      <p class="text-xs text-muted-foreground/40 mt-3" id="post-count">共 {published.length} 篇文章</p>
     </div>
 
-    <!-- 插件开关 -->
-    <div class="mb-10" data-animate>
-      <h2 class="text-lg font-semibold mb-4">插件管理</h2>
+    <!-- 留言管理 -->
+    <div class="tab-panel hidden" id="panel-guestbook">
+      <div class="border border-border/40 rounded-xl overflow-hidden">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-muted/30 border-b border-border/40">
+              <th class="text-left px-4 py-3 font-medium text-muted-foreground/70">昵称</th>
+              <th class="text-left px-4 py-3 font-medium text-muted-foreground/70">留言</th>
+              <th class="text-left px-4 py-3 font-medium text-muted-foreground/70 hidden md:table-cell">时间</th>
+              <th class="text-right px-4 py-3 font-medium text-muted-foreground/70">操作</th>
+            </tr>
+          </thead>
+          <tbody id="guestbook-tbody">
+            <tr><td colspan="4" class="px-4 py-8 text-center text-sm text-muted-foreground/40">加载中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="flex gap-3 mt-4">
+        <button id="export-guestbook" class="px-4 py-2 rounded-xl border border-border/40 bg-card/50 text-sm hover:border-primary/20 transition-all">导出留言</button>
+        <button id="clear-guestbook" class="px-4 py-2 rounded-xl border border-red-500/20 bg-red-500/5 text-sm text-red-500 hover:bg-red-500/10 transition-all">清空留言</button>
+      </div>
+    </div>
+
+    <!-- 订阅管理 -->
+    <div class="tab-panel hidden" id="panel-subscribers">
+      <div class="border border-border/40 rounded-xl overflow-hidden">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-muted/30 border-b border-border/40">
+              <th class="text-left px-4 py-3 font-medium text-muted-foreground/70">邮箱</th>
+              <th class="text-left px-4 py-3 font-medium text-muted-foreground/70 hidden md:table-cell">订阅时间</th>
+              <th class="text-right px-4 py-3 font-medium text-muted-foreground/70">操作</th>
+            </tr>
+          </thead>
+          <tbody id="subscribers-tbody">
+            <tr><td colspan="3" class="px-4 py-8 text-center text-sm text-muted-foreground/40">加载中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="flex gap-3 mt-4">
+        <button id="export-subscribers" class="px-4 py-2 rounded-xl border border-border/40 bg-card/50 text-sm hover:border-primary/20 transition-all">导出订阅者</button>
+        <button id="clear-subscribers" class="px-4 py-2 rounded-xl border border-red-500/20 bg-red-500/5 text-sm text-red-500 hover:bg-red-500/10 transition-all">清空订阅</button>
+      </div>
+    </div>
+
+    <!-- 收藏管理 -->
+    <div class="tab-panel hidden" id="panel-bookmarks">
+      <div class="border border-border/40 rounded-xl overflow-hidden">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-muted/30 border-b border-border/40">
+              <th class="text-left px-4 py-3 font-medium text-muted-foreground/70">标题</th>
+              <th class="text-left px-4 py-3 font-medium text-muted-foreground/70 hidden md:table-cell">链接</th>
+              <th class="text-left px-4 py-3 font-medium text-muted-foreground/70 hidden md:table-cell">时间</th>
+              <th class="text-right px-4 py-3 font-medium text-muted-foreground/70">操作</th>
+            </tr>
+          </thead>
+          <tbody id="bookmarks-tbody">
+            <tr><td colspan="4" class="px-4 py-8 text-center text-sm text-muted-foreground/40">加载中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="flex gap-3 mt-4">
+        <button id="export-bookmarks" class="px-4 py-2 rounded-xl border border-border/40 bg-card/50 text-sm hover:border-primary/20 transition-all">导出收藏</button>
+        <button id="clear-bookmarks" class="px-4 py-2 rounded-xl border border-red-500/20 bg-red-500/5 text-sm text-red-500 hover:bg-red-500/10 transition-all">清空收藏</button>
+      </div>
+    </div>
+
+    <!-- 插件管理 -->
+    <div class="tab-panel hidden" id="panel-plugins">
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div class="flex items-center justify-between p-4 rounded-xl border border-border/40 bg-card/50">
-          <div>
-            <p class="text-sm font-medium">粒子背景</p>
-            <p class="text-xs text-muted-foreground/60">首页浮动粒子效果</p>
+        {[
+          { name: "particles", label: "粒子背景", desc: "首页浮动粒子效果" },
+          { name: "scrollReveal", label: "滚动揭示动画", desc: "元素入场淡入效果" },
+          { name: "cosmicEnding", label: "宇宙结尾", desc: "滚动到底部星空动画" },
+          { name: "lightbox", label: "图片灯箱", desc: "点击图片全屏预览" },
+          { name: "magneticButtons", label: "鼠标磁吸", desc: "按钮磁吸跟随效果" },
+          { name: "textScramble", label: "打字机特效", desc: "Hero 区文字乱序动画" },
+          { name: "cardTilt", label: "3D 卡片倾斜", desc: "文章卡片鼠标跟随倾斜" },
+        ].map((p) => (
+          <div class="flex items-center justify-between p-4 rounded-xl border border-border/40 bg-card/50">
+            <div>
+              <p class="text-sm font-medium">{p.label}</p>
+              <p class="text-xs text-muted-foreground/60">{p.desc}</p>
+            </div>
+            <label class="plugin-toggle relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" class="sr-only peer" data-plugin={p.name} checked />
+              <div class="w-10 h-5 bg-muted rounded-full peer peer-checked:bg-primary/60 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
+            </label>
           </div>
-          <label class="plugin-toggle relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" class="sr-only peer" data-plugin="particles" checked />
-            <div class="w-10 h-5 bg-muted rounded-full peer peer-checked:bg-primary/60 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
-          </label>
-        </div>
-        <div class="flex items-center justify-between p-4 rounded-xl border border-border/40 bg-card/50">
-          <div>
-            <p class="text-sm font-medium">滚动揭示动画</p>
-            <p class="text-xs text-muted-foreground/60">元素入场淡入效果</p>
-          </div>
-          <label class="plugin-toggle relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" class="sr-only peer" data-plugin="scrollReveal" checked />
-            <div class="w-10 h-5 bg-muted rounded-full peer peer-checked:bg-primary/60 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
-          </label>
-        </div>
-        <div class="flex items-center justify-between p-4 rounded-xl border border-border/40 bg-card/50">
-          <div>
-            <p class="text-sm font-medium">宇宙结尾</p>
-            <p class="text-xs text-muted-foreground/60">滚动到底部星空动画</p>
-          </div>
-          <label class="plugin-toggle relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" class="sr-only peer" data-plugin="cosmicEnding" checked />
-            <div class="w-10 h-5 bg-muted rounded-full peer peer-checked:bg-primary/60 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
-          </label>
-        </div>
-        <div class="flex items-center justify-between p-4 rounded-xl border border-border/40 bg-card/50">
-          <div>
-            <p class="text-sm font-medium">图片灯箱</p>
-            <p class="text-xs text-muted-foreground/60">点击图片全屏预览</p>
-          </div>
-          <label class="plugin-toggle relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" class="sr-only peer" data-plugin="lightbox" checked />
-            <div class="w-10 h-5 bg-muted rounded-full peer peer-checked:bg-primary/60 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
-          </label>
-        </div>
-        <div class="flex items-center justify-between p-4 rounded-xl border border-border/40 bg-card/50">
-          <div>
-            <p class="text-sm font-medium">鼠标磁吸</p>
-            <p class="text-xs text-muted-foreground/60">按钮磁吸跟随效果</p>
-          </div>
-          <label class="plugin-toggle relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" class="sr-only peer" data-plugin="magneticButtons" checked />
-            <div class="w-10 h-5 bg-muted rounded-full peer peer-checked:bg-primary/60 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
-          </label>
-        </div>
-        <div class="flex items-center justify-between p-4 rounded-xl border border-border/40 bg-card/50">
-          <div>
-            <p class="text-sm font-medium">打字机特效</p>
-            <p class="text-xs text-muted-foreground/60">Hero 区文字乱序动画</p>
-          </div>
-          <label class="plugin-toggle relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" class="sr-only peer" data-plugin="textScramble" checked />
-            <div class="w-10 h-5 bg-muted rounded-full peer peer-checked:bg-primary/60 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
-          </label>
-        </div>
-        <div class="flex items-center justify-between p-4 rounded-xl border border-border/40 bg-card/50">
-          <div>
-            <p class="text-sm font-medium">3D 卡片倾斜</p>
-            <p class="text-xs text-muted-foreground/60">文章卡片鼠标跟随倾斜</p>
-          </div>
-          <label class="plugin-toggle relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" class="sr-only peer" data-plugin="cardTilt" checked />
-            <div class="w-10 h-5 bg-muted rounded-full peer peer-checked:bg-primary/60 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
-          </label>
-        </div>
+        ))}
         <div class="flex items-center justify-between p-4 rounded-xl border border-primary/20 bg-primary/5">
           <div>
             <p class="text-sm font-medium text-primary">轻量化模式</p>
@@ -158,29 +235,321 @@ const totalWords = published.reduce((sum, p) => sum + (p.body?.split(/\s+/).leng
       </div>
     </div>
 
-    <!-- 数据导出 -->
-    <div data-animate>
-      <h2 class="text-lg font-semibold mb-4">数据</h2>
-      <div class="flex gap-3">
-        <button
-          id="export-bookmarks"
-          class="px-4 py-2 rounded-xl border border-border/40 bg-card/50 text-sm hover:border-primary/20 transition-all"
-        >导出收藏</button>
-        <button
-          id="export-guestbook"
-          class="px-4 py-2 rounded-xl border border-border/40 bg-card/50 text-sm hover:border-primary/20 transition-all"
-        >导出留言</button>
-        <button
-          id="clear-data"
-          class="px-4 py-2 rounded-xl border border-red-500/20 bg-red-500/5 text-sm text-red-500 hover:bg-red-500/10 transition-all"
-        >清除所有本地数据</button>
+    <!-- 主题外观 -->
+    <div class="tab-panel hidden" id="panel-appearance">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <h3 class="text-sm font-semibold mb-3">主题切换</h3>
+          <div class="grid grid-cols-2 gap-2" id="theme-options">
+            <button class="theme-opt p-4 rounded-xl border border-border/40 bg-card/50 text-left hover:border-primary/40 transition-all" data-theme="light">
+              <div class="w-full h-8 rounded-lg bg-[#f8f5f0] border border-[#e8e0d4] mb-2"></div>
+              <p class="text-xs font-medium">日间暖光</p>
+            </button>
+            <button class="theme-opt p-4 rounded-xl border border-border/40 bg-card/50 text-left hover:border-primary/40 transition-all" data-theme="dark">
+              <div class="w-full h-8 rounded-lg bg-[#0a0e17] border border-[#1a2332] mb-2"></div>
+              <p class="text-xs font-medium">极客蓝</p>
+            </button>
+            <button class="theme-opt p-4 rounded-xl border border-border/40 bg-card/50 text-left hover:border-primary/40 transition-all" data-theme="deep-blue">
+              <div class="w-full h-8 rounded-lg bg-[#0b1120] border border-[#162040] mb-2"></div>
+              <p class="text-xs font-medium">深夜蓝</p>
+            </button>
+            <button class="theme-opt p-4 rounded-xl border border-border/40 bg-card/50 text-left hover:border-primary/40 transition-all" data-theme="eye-green">
+              <div class="w-full h-8 rounded-lg bg-[#f0f5e8] border border-[#d4e4c4] mb-2"></div>
+              <p class="text-xs font-medium">护眼绿</p>
+            </button>
+          </div>
+        </div>
+        <div>
+          <h3 class="text-sm font-semibold mb-3">快捷操作</h3>
+          <div class="space-y-2">
+            <button id="clear-theme" class="w-full px-4 py-3 rounded-xl border border-border/40 bg-card/50 text-sm text-left hover:border-primary/20 transition-all">
+              重置为默认主题
+            </button>
+            <button id="toggle-font-size" class="w-full px-4 py-3 rounded-xl border border-border/40 bg-card/50 text-sm text-left hover:border-primary/20 transition-all">
+              切换大字号模式
+            </button>
+          </div>
+          <h3 class="text-sm font-semibold mb-3 mt-6">当前状态</h3>
+          <div class="p-4 rounded-xl border border-border/40 bg-card/50 text-sm space-y-1">
+            <p>当前主题：<span id="current-theme" class="text-primary">-</span></p>
+            <p>字号模式：<span id="current-font" class="text-primary">标准</span></p>
+            <p>轻量化：<span id="current-lite" class="text-primary">关闭</span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 站点设置 -->
+    <div class="tab-panel hidden" id="panel-settings">
+      <div class="max-w-lg space-y-4">
+        <div>
+          <label class="text-sm font-medium block mb-1.5">站点标题</label>
+          <input type="text" id="site-title" placeholder="Sezario." class="w-full px-4 py-2.5 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none focus:border-primary/40" />
+        </div>
+        <div>
+          <label class="text-sm font-medium block mb-1.5">站点描述</label>
+          <input type="text" id="site-desc" placeholder="个人博客" class="w-full px-4 py-2.5 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none focus:border-primary/40" />
+        </div>
+        <div>
+          <label class="text-sm font-medium block mb-1.5">每页文章数</label>
+          <input type="number" id="page-size" value="6" min="3" max="20" class="w-full px-4 py-2.5 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none focus:border-primary/40" />
+        </div>
+        <div class="flex items-center justify-between p-4 rounded-xl border border-border/40 bg-card/50">
+          <div>
+            <p class="text-sm font-medium">显示字数统计</p>
+            <p class="text-xs text-muted-foreground/60">文章详情页显示阅读时间</p>
+          </div>
+          <label class="plugin-toggle relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" class="sr-only peer" id="show-wordcount" checked />
+            <div class="w-10 h-5 bg-muted rounded-full peer peer-checked:bg-primary/60 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
+          </label>
+        </div>
+        <div class="flex items-center justify-between p-4 rounded-xl border border-border/40 bg-card/50">
+          <div>
+            <p class="text-sm font-medium">显示阅读时间</p>
+            <p class="text-xs text-muted-foreground/60">文章详情页显示预计阅读时间</p>
+          </div>
+          <label class="plugin-toggle relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" class="sr-only peer" id="show-readingtime" checked />
+            <div class="w-10 h-5 bg-muted rounded-full peer peer-checked:bg-primary/60 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
+          </label>
+        </div>
+        <button id="save-settings" class="px-6 py-2.5 rounded-xl bg-primary/80 text-white text-sm font-medium hover:bg-primary/90 transition-colors">保存设置</button>
+        <p id="settings-saved" class="text-xs text-green-500 hidden">已保存</p>
+      </div>
+    </div>
+
+    <!-- 数据管理 -->
+    <div class="tab-panel hidden" id="panel-data">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <h3 class="text-sm font-semibold mb-3">数据导出</h3>
+          <div class="space-y-2">
+            <button id="export-all" class="w-full px-4 py-3 rounded-xl border border-border/40 bg-card/50 text-sm text-left hover:border-primary/20 transition-all">
+              导出所有数据（JSON）
+            </button>
+            <button id="export-guestbook-2" class="w-full px-4 py-3 rounded-xl border border-border/40 bg-card/50 text-sm text-left hover:border-primary/20 transition-all">
+              导出留言数据
+            </button>
+            <button id="export-subscribers-2" class="w-full px-4 py-3 rounded-xl border border-border/40 bg-card/50 text-sm text-left hover:border-primary/20 transition-all">
+              导出订阅数据
+            </button>
+            <button id="export-bookmarks-2" class="w-full px-4 py-3 rounded-xl border border-border/40 bg-card/50 text-sm text-left hover:border-primary/20 transition-all">
+              导出收藏数据
+            </button>
+          </div>
+        </div>
+        <div>
+          <h3 class="text-sm font-semibold mb-3 text-red-500">危险操作</h3>
+          <div class="space-y-2">
+            <button id="clear-guestbook-2" class="w-full px-4 py-3 rounded-xl border border-red-500/20 bg-red-500/5 text-sm text-red-500 text-left hover:bg-red-500/10 transition-all">
+              清空所有留言
+            </button>
+            <button id="clear-subscribers-2" class="w-full px-4 py-3 rounded-xl border border-red-500/20 bg-red-500/5 text-sm text-red-500 text-left hover:bg-red-500/10 transition-all">
+              清空所有订阅
+            </button>
+            <button id="clear-bookmarks-2" class="w-full px-4 py-3 rounded-xl border border-red-500/20 bg-red-500/5 text-sm text-red-500 text-left hover:bg-red-500/10 transition-all">
+              清空所有收藏
+            </button>
+            <button id="clear-all-data" class="w-full px-4 py-3 rounded-xl border border-red-500/20 bg-red-500/5 text-sm text-red-500 text-left hover:bg-red-500/10 transition-all font-medium">
+              清除所有本地数据
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 </BaseLayout>
 
 <script>
-  // 插件开关
+  // ===== 登录验证 =====
+  const loginForm = document.getElementById("login-form") as HTMLFormElement;
+  const loginPanel = document.getElementById("admin-panel");
+  const loginSection = document.getElementById("admin-login");
+  const loginError = document.getElementById("login-error");
+
+  async function showAdmin() {
+    loginSection?.classList.add("hidden");
+    loginPanel?.classList.remove("hidden");
+    loadAllData();
+  }
+
+  if (sessionStorage.getItem("admin_auth") === "1") showAdmin();
+
+  loginForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const pwd = (document.getElementById("login-password") as HTMLInputElement).value;
+    try {
+      const res = await fetch("/api/admin-verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: pwd }),
+      });
+      if (res.ok) {
+        sessionStorage.setItem("admin_auth", "1");
+        showAdmin();
+      } else {
+        loginError?.classList.remove("hidden");
+        setTimeout(() => loginError?.classList.add("hidden"), 2000);
+      }
+    } catch {
+      loginError?.classList.remove("hidden");
+      setTimeout(() => loginError?.classList.add("hidden"), 2000);
+    }
+  });
+
+  document.getElementById("login-password")?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") loginForm?.requestSubmit();
+  });
+
+  // ===== 标签页切换 =====
+  const tabBtns = document.querySelectorAll<HTMLButtonElement>(".tab-btn");
+  const tabPanels = document.querySelectorAll<HTMLElement>(".tab-panel");
+
+  tabBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      tabBtns.forEach((b) => { b.classList.remove("bg-primary/10", "text-primary"); b.classList.add("text-muted-foreground/60"); });
+      tabPanels.forEach((p) => p.classList.add("hidden"));
+      btn.classList.add("bg-primary/10", "text-primary");
+      btn.classList.remove("text-muted-foreground/60");
+      document.getElementById(`panel-${btn.dataset.tab}`)?.classList.remove("hidden");
+    });
+  });
+
+  // ===== 数据加载 =====
+  function loadAllData() {
+    loadGuestbook();
+    loadSubscribers();
+    loadBookmarks();
+    loadDashboardStats();
+    loadAppearanceState();
+    loadSettings();
+  }
+
+  function loadDashboardStats() {
+    const gb = JSON.parse(localStorage.getItem("guestbook") || "[]");
+    const subs = JSON.parse(localStorage.getItem("subscribers") || "[]");
+    const bm = JSON.parse(localStorage.getItem("bookmarks") || "[]");
+    const el = (id: string) => document.getElementById(id);
+    if (el("stat-guestbook")) el("stat-guestbook")!.textContent = gb.length;
+    if (el("stat-subscribers")) el("stat-subscribers")!.textContent = subs.length;
+    if (el("stat-bookmarks")) el("stat-bookmarks")!.textContent = bm.length;
+  }
+
+  // ===== 留言管理 =====
+  function loadGuestbook() {
+    const data: Array<{ name: string; message: string; time: string }> = JSON.parse(localStorage.getItem("guestbook") || "[]");
+    const tbody = document.getElementById("guestbook-tbody");
+    if (!tbody) return;
+    if (!data.length) { tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-8 text-center text-sm text-muted-foreground/40">暂无留言</td></tr>'; return; }
+    tbody.innerHTML = data.map((m, i) => `
+      <tr class="border-b border-border/30 hover:bg-muted/20 transition-colors">
+        <td class="px-4 py-3 font-medium">${escapeHtml(m.name)}</td>
+        <td class="px-4 py-3 text-muted-foreground/70 line-clamp-2">${escapeHtml(m.message)}</td>
+        <td class="px-4 py-3 text-xs text-muted-foreground/60 hidden md:table-cell">${m.time ? new Date(m.time).toLocaleString("zh-CN") : "-"}</td>
+        <td class="px-4 py-3 text-right"><button class="text-xs text-red-500 hover:text-red-600 gb-del" data-index="${i}">删除</button></td>
+      </tr>
+    `).join("");
+    tbody.querySelectorAll(".gb-del").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const idx = parseInt((btn as HTMLElement).dataset.index || "0");
+        data.splice(idx, 1);
+        localStorage.setItem("guestbook", JSON.stringify(data));
+        loadGuestbook();
+        loadDashboardStats();
+      });
+    });
+  }
+
+  document.getElementById("export-guestbook")?.addEventListener("click", () => {
+    downloadJSON(JSON.parse(localStorage.getItem("guestbook") || "[]"), "guestbook.json");
+  });
+  document.getElementById("clear-guestbook")?.addEventListener("click", () => {
+    if (confirm("确定清空所有留言？")) { localStorage.removeItem("guestbook"); loadGuestbook(); loadDashboardStats(); }
+  });
+
+  // ===== 订阅管理 =====
+  function loadSubscribers() {
+    const data: Array<{ email: string; time: string }> = JSON.parse(localStorage.getItem("subscribers") || "[]");
+    const tbody = document.getElementById("subscribers-tbody");
+    if (!tbody) return;
+    if (!data.length) { tbody.innerHTML = '<tr><td colspan="3" class="px-4 py-8 text-center text-sm text-muted-foreground/40">暂无订阅</td></tr>'; return; }
+    tbody.innerHTML = data.map((s, i) => `
+      <tr class="border-b border-border/30 hover:bg-muted/20 transition-colors">
+        <td class="px-4 py-3">${escapeHtml(s.email)}</td>
+        <td class="px-4 py-3 text-xs text-muted-foreground/60 hidden md:table-cell">${s.time ? new Date(s.time).toLocaleString("zh-CN") : "-"}</td>
+        <td class="px-4 py-3 text-right"><button class="text-xs text-red-500 hover:text-red-600 sub-del" data-index="${i}">删除</button></td>
+      </tr>
+    `).join("");
+    tbody.querySelectorAll(".sub-del").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const idx = parseInt((btn as HTMLElement).dataset.index || "0");
+        data.splice(idx, 1);
+        localStorage.setItem("subscribers", JSON.stringify(data));
+        loadSubscribers();
+        loadDashboardStats();
+      });
+    });
+  }
+
+  document.getElementById("export-subscribers")?.addEventListener("click", () => {
+    downloadJSON(JSON.parse(localStorage.getItem("subscribers") || "[]"), "subscribers.json");
+  });
+  document.getElementById("clear-subscribers")?.addEventListener("click", () => {
+    if (confirm("确定清空所有订阅？")) { localStorage.removeItem("subscribers"); loadSubscribers(); loadDashboardStats(); }
+  });
+
+  // ===== 收藏管理 =====
+  function loadBookmarks() {
+    const data: Array<{ title: string; url: string; time: string }> = JSON.parse(localStorage.getItem("bookmarks") || "[]");
+    const tbody = document.getElementById("bookmarks-tbody");
+    if (!tbody) return;
+    if (!data.length) { tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-8 text-center text-sm text-muted-foreground/40">暂无收藏</td></tr>'; return; }
+    tbody.innerHTML = data.map((b, i) => `
+      <tr class="border-b border-border/30 hover:bg-muted/20 transition-colors">
+        <td class="px-4 py-3"><a href="${escapeHtml(b.url)}" target="_blank" class="hover:text-primary transition-colors line-clamp-1">${escapeHtml(b.title)}</a></td>
+        <td class="px-4 py-3 text-xs text-muted-foreground/60 hidden md:table-cell truncate max-w-[200px]">${escapeHtml(b.url)}</td>
+        <td class="px-4 py-3 text-xs text-muted-foreground/60 hidden md:table-cell">${b.time ? new Date(b.time).toLocaleString("zh-CN") : "-"}</td>
+        <td class="px-4 py-3 text-right"><button class="text-xs text-red-500 hover:text-red-600 bm-del" data-index="${i}">删除</button></td>
+      </tr>
+    `).join("");
+    tbody.querySelectorAll(".bm-del").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const idx = parseInt((btn as HTMLElement).dataset.index || "0");
+        data.splice(idx, 1);
+        localStorage.setItem("bookmarks", JSON.stringify(data));
+        loadBookmarks();
+        loadDashboardStats();
+      });
+    });
+  }
+
+  document.getElementById("export-bookmarks")?.addEventListener("click", () => {
+    downloadJSON(JSON.parse(localStorage.getItem("bookmarks") || "[]"), "bookmarks.json");
+  });
+  document.getElementById("clear-bookmarks")?.addEventListener("click", () => {
+    if (confirm("确定清空所有收藏？")) { localStorage.removeItem("bookmarks"); loadBookmarks(); loadDashboardStats(); }
+  });
+
+  // ===== 文章搜索/筛选 =====
+  document.getElementById("post-search")?.addEventListener("input", filterPosts);
+  document.getElementById("post-category-filter")?.addEventListener("change", filterPosts);
+
+  function filterPosts() {
+    const q = (document.getElementById("post-search") as HTMLInputElement)?.value.toLowerCase() || "";
+    const cat = (document.getElementById("post-category-filter") as HTMLSelectElement)?.value || "";
+    let count = 0;
+    document.querySelectorAll(".post-row").forEach((row) => {
+      const el = row as HTMLElement;
+      const match = el.dataset.title!.includes(q) && (!cat || el.dataset.category === cat);
+      el.style.display = match ? "" : "none";
+      if (match) count++;
+    });
+    const el = document.getElementById("post-count");
+    if (el) el.textContent = `显示 ${count} 篇文章`;
+  }
+
+  // ===== 插件开关 =====
   document.querySelectorAll<HTMLInputElement>(".plugin-toggle input").forEach((toggle) => {
     const plugin = toggle.dataset.plugin || "";
     const stored = localStorage.getItem(`plugin_${plugin}`);
@@ -188,78 +557,127 @@ const totalWords = published.reduce((sum, p) => sum + (p.body?.split(/\s+/).leng
 
     toggle.addEventListener("change", () => {
       localStorage.setItem(`plugin_${plugin}`, toggle.checked ? "on" : "off");
-
       if (plugin === "liteMode") {
         document.documentElement.classList.toggle("lite-mode", toggle.checked);
-        // 联动关闭所有其他插件
         if (toggle.checked) {
           document.querySelectorAll<HTMLInputElement>(".plugin-toggle input").forEach((t) => {
-            if (t.dataset.plugin !== "liteMode") {
-              t.checked = false;
-              localStorage.setItem(`plugin_${t.dataset.plugin}`, "off");
-            }
+            if (t.dataset.plugin !== "liteMode") { t.checked = false; localStorage.setItem(`plugin_${t.dataset.plugin}`, "off"); }
           });
         }
       }
-      if (plugin === "particles") {
-        document.querySelectorAll("canvas").forEach((c) => (c as HTMLElement).style.display = toggle.checked ? "" : "none");
-      }
-      if (plugin === "scrollReveal") {
-        document.querySelectorAll("[data-animate]").forEach((el) => {
-          (el as HTMLElement).style.animationPlayState = toggle.checked ? "running" : "paused";
-        });
-      }
-      if (plugin === "cosmicEnding") {
-        const el = document.getElementById("cosmic-ending");
-        if (el) el.style.display = toggle.checked ? "" : "none";
-      }
-      if (plugin === "magneticButtons") {
-        document.documentElement.classList.toggle("no-magnetic", !toggle.checked);
-      }
-      if (plugin === "textScramble") {
-        document.documentElement.classList.toggle("no-scramble", !toggle.checked);
-      }
-      if (plugin === "cardTilt") {
-        document.documentElement.classList.toggle("no-tilt", !toggle.checked);
-      }
+      if (plugin === "particles") document.querySelectorAll("canvas").forEach((c) => (c as HTMLElement).style.display = toggle.checked ? "" : "none");
+      if (plugin === "scrollReveal") document.querySelectorAll("[data-animate]").forEach((el) => { (el as HTMLElement).style.animationPlayState = toggle.checked ? "running" : "paused"; });
+      if (plugin === "cosmicEnding") { const el = document.getElementById("cosmic-ending"); if (el) el.style.display = toggle.checked ? "" : "none"; }
+      if (plugin === "magneticButtons") document.documentElement.classList.toggle("no-magnetic", !toggle.checked);
+      if (plugin === "textScramble") document.documentElement.classList.toggle("no-scramble", !toggle.checked);
+      if (plugin === "cardTilt") document.documentElement.classList.toggle("no-tilt", !toggle.checked);
     });
   });
 
-  // 初始化 lite-mode
-  if (localStorage.getItem("plugin_liteMode") === "on") {
-    document.documentElement.classList.add("lite-mode");
+  if (localStorage.getItem("plugin_liteMode") === "on") document.documentElement.classList.add("lite-mode");
+
+  // ===== 主题外观 =====
+  function loadAppearanceState() {
+    const theme = localStorage.getItem("theme") || "dark";
+    const el = document.getElementById("current-theme");
+    if (el) el.textContent = { light: "日间暖光", dark: "极客蓝", "deep-blue": "深夜蓝", "eye-green": "护眼绿" }[theme] || theme;
+    const fs = document.getElementById("current-font");
+    if (fs) fs.textContent = document.documentElement.classList.contains("large-font") ? "大字号" : "标准";
+    const lite = document.getElementById("current-lite");
+    if (lite) lite.textContent = document.documentElement.classList.contains("lite-mode") ? "开启" : "关闭";
   }
 
-  // 导出收藏
-  document.getElementById("export-bookmarks")?.addEventListener("click", () => {
-    const data = localStorage.getItem("bookmarks") || "[]";
-    downloadJSON(JSON.parse(data), "bookmarks.json");
+  document.querySelectorAll(".theme-opt").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const theme = (btn as HTMLElement).dataset.theme!;
+      localStorage.setItem("theme", theme);
+      document.documentElement.setAttribute("data-theme", theme);
+      loadAppearanceState();
+    });
   });
 
-  // 导出留言
-  document.getElementById("export-guestbook")?.addEventListener("click", () => {
-    const data = localStorage.getItem("guestbook") || "[]";
-    downloadJSON(JSON.parse(data), "guestbook.json");
+  document.getElementById("clear-theme")?.addEventListener("click", () => {
+    localStorage.removeItem("theme");
+    document.documentElement.removeAttribute("data-theme");
+    loadAppearanceState();
   });
 
-  // 清除数据
-  document.getElementById("clear-data")?.addEventListener("click", () => {
-    if (confirm("确定要清除所有本地数据吗？此操作不可恢复。")) {
-      localStorage.removeItem("bookmarks");
-      localStorage.removeItem("guestbook");
-      localStorage.removeItem("subscribers");
-      localStorage.removeItem("theme");
+  document.getElementById("toggle-font-size")?.addEventListener("click", () => {
+    document.documentElement.classList.toggle("large-font");
+    loadAppearanceState();
+  });
+
+  // ===== 站点设置 =====
+  function loadSettings() {
+    const s = JSON.parse(localStorage.getItem("site_settings") || "{}");
+    const t = document.getElementById("site-title") as HTMLInputElement;
+    const d = document.getElementById("site-desc") as HTMLInputElement;
+    const p = document.getElementById("page-size") as HTMLInputElement;
+    const wc = document.getElementById("show-wordcount") as HTMLInputElement;
+    const rt = document.getElementById("show-readingtime") as HTMLInputElement;
+    if (t) t.value = s.title || "";
+    if (d) d.value = s.desc || "";
+    if (p) p.value = s.pageSize || "6";
+    if (wc) wc.checked = s.showWordcount !== false;
+    if (rt) rt.checked = s.showReadingtime !== false;
+  }
+
+  document.getElementById("save-settings")?.addEventListener("click", () => {
+    const settings = {
+      title: (document.getElementById("site-title") as HTMLInputElement)?.value,
+      desc: (document.getElementById("site-desc") as HTMLInputElement)?.value,
+      pageSize: (document.getElementById("page-size") as HTMLInputElement)?.value,
+      showWordcount: (document.getElementById("show-wordcount") as HTMLInputElement)?.checked,
+      showReadingtime: (document.getElementById("show-readingtime") as HTMLInputElement)?.checked,
+    };
+    localStorage.setItem("site_settings", JSON.stringify(settings));
+    const msg = document.getElementById("settings-saved");
+    msg?.classList.remove("hidden");
+    setTimeout(() => msg?.classList.add("hidden"), 2000);
+  });
+
+  // ===== 数据管理 =====
+  function exportAll() {
+    const data = {
+      guestbook: JSON.parse(localStorage.getItem("guestbook") || "[]"),
+      subscribers: JSON.parse(localStorage.getItem("subscribers") || "[]"),
+      bookmarks: JSON.parse(localStorage.getItem("bookmarks") || "[]"),
+      settings: JSON.parse(localStorage.getItem("site_settings") || "{}"),
+      plugins: Object.fromEntries(Object.entries(localStorage).filter(([k]) => k.startsWith("plugin_"))),
+      exportedAt: new Date().toISOString(),
+    };
+    downloadJSON(data, "blog-all-data.json");
+  }
+
+  document.getElementById("export-all")?.addEventListener("click", exportAll);
+  document.getElementById("export-guestbook-2")?.addEventListener("click", () => downloadJSON(JSON.parse(localStorage.getItem("guestbook") || "[]"), "guestbook.json"));
+  document.getElementById("export-subscribers-2")?.addEventListener("click", () => downloadJSON(JSON.parse(localStorage.getItem("subscribers") || "[]"), "subscribers.json"));
+  document.getElementById("export-bookmarks-2")?.addEventListener("click", () => downloadJSON(JSON.parse(localStorage.getItem("bookmarks") || "[]"), "bookmarks.json"));
+
+  document.getElementById("clear-guestbook-2")?.addEventListener("click", () => { if (confirm("确定清空？")) { localStorage.removeItem("guestbook"); loadGuestbook(); loadDashboardStats(); } });
+  document.getElementById("clear-subscribers-2")?.addEventListener("click", () => { if (confirm("确定清空？")) { localStorage.removeItem("subscribers"); loadSubscribers(); loadDashboardStats(); } });
+  document.getElementById("clear-bookmarks-2")?.addEventListener("click", () => { if (confirm("确定清空？")) { localStorage.removeItem("bookmarks"); loadBookmarks(); loadDashboardStats(); } });
+  document.getElementById("clear-all-data")?.addEventListener("click", () => {
+    if (confirm("确定清除所有本地数据？此操作不可恢复！")) {
+      ["bookmarks", "guestbook", "subscribers", "theme", "site_settings"].forEach((k) => localStorage.removeItem(k));
+      Object.keys(localStorage).filter((k) => k.startsWith("plugin_")).forEach((k) => localStorage.removeItem(k));
       alert("已清除");
+      loadAllData();
     }
   });
 
+  // ===== 工具函数 =====
   function downloadJSON(data: any, filename: string) {
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    a.click();
+    a.href = url; a.download = filename; a.click();
     URL.revokeObjectURL(url);
+  }
+
+  function escapeHtml(str: string) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
   }
 </script>

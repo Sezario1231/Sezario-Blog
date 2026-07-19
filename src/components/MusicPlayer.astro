@@ -18,13 +18,11 @@
         </svg>
       </button>
     </div>
-    <!-- 进度条 -->
     <div class="mt-2 h-1 rounded-full bg-muted/30 overflow-hidden">
       <div class="h-full bg-primary/60 rounded-full transition-all duration-300" id="music-progress" style="width: 0%"></div>
     </div>
   </div>
 
-  <!-- 展开面板 -->
   <div class="music-expanded glass-card rounded-2xl p-4 w-64 border border-border/40 shadow-xl hidden mt-2" id="music-panel">
     <p class="text-xs font-semibold mb-2">播放列表</p>
     <div class="space-y-1.5" id="music-playlist"></div>
@@ -39,25 +37,101 @@
 
 <script>
   const playlist = [
-    { title: "Ambient Study", artist: "Lofi Girl", url: "" },
-    { title: "Midnight coding", artist: "Chill Beats", url: "" },
-    { title: "Rainy afternoon", artist: "Jazz Hop", url: "" },
+    { title: "Oh My Saturday", artist: "aroundyou", url: "/music/aroundyou-oh-my-saturday-240376.mp3" },
+    { title: "Calm Classical Piano", artist: "clavier-music", url: "/music/clavier-music-calm-classical-piano-291012.mp3" },
+    { title: "Native American Flute", artist: "hdhazard", url: "/music/hdhazard-native-american-flute-277509.mp3" },
+    { title: "Soft Background Music", artist: "lnplusmusic", url: "/music/lnplusmusic-soft-background-music-424109.mp3" },
+    { title: "Snowfall Ambient Music", artist: "smccleery", url: "/music/smccleery-snowfall-ambient-music-258684.mp3" },
   ];
 
-  function initMusicPlayer() {
+  // ---- 全局状态（跨页面持久） ----
+  let currentTrack = 0;
+  let playing = false;
+  let audio: HTMLAudioElement | null = null;
+  let progressRaf = 0;
+
+  // ---- 创建/复用 audio ----
+  function getAudio(): HTMLAudioElement {
+    if (audio) return audio;
+    audio = new Audio();
+    audio.preload = "auto";
+    audio.volume = 0.7;
+    audio.addEventListener("ended", () => {
+      currentTrack = (currentTrack + 1) % playlist.length;
+      loadTrack(currentTrack, true);
+    });
+    return audio;
+  }
+
+  // ---- 加载并可选播放 ----
+  function loadTrack(index: number, autoplay: boolean) {
+    currentTrack = index;
+    const a = getAudio();
+    const src = playlist[index].url;
+    if (a.src !== location.origin + src && a.src !== src) {
+      a.src = src;
+      a.load();
+    }
+    if (autoplay) {
+      a.play().then(() => { playing = true; syncUI(); }).catch(() => { playing = false; syncUI(); });
+    } else {
+      playing = false;
+      syncUI();
+    }
+  }
+
+  // ---- 同步 UI ----
+  function syncUI() {
+    const icon = document.getElementById("play-icon");
+    if (icon) {
+      icon.innerHTML = playing
+        ? '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>'
+        : '<polygon points="5,3 19,12 5,21"/>';
+    }
     const player = document.getElementById("music-player");
-    const toggle = document.getElementById("music-toggle");
-    const panel = document.getElementById("music-panel");
-    const playBtn = document.getElementById("music-play-btn");
+    const disc = player?.querySelector(".music-disc") as HTMLElement;
+    if (disc) disc.style.animationPlayState = playing ? "running" : "paused";
+
     const titleEl = document.getElementById("music-title");
     const artistEl = document.getElementById("music-artist");
-    const playlistEl = document.getElementById("music-playlist");
+    const t = playlist[currentTrack];
+    if (titleEl) titleEl.textContent = playing || (audio && !audio.paused) ? t.title : "未播放";
+    if (artistEl) artistEl.textContent = playing || (audio && !audio.paused) ? t.artist : "点击播放";
+  }
 
+  // ---- 进度条轮询 ----
+  function startProgressLoop() {
+    if (progressRaf) return;
+    function tick() {
+      const bar = document.getElementById("music-progress");
+      if (audio && bar && audio.duration) {
+        bar.style.width = `${(audio.currentTime / audio.duration) * 100}%`;
+      }
+      progressRaf = requestAnimationFrame(tick);
+    }
+    progressRaf = requestAnimationFrame(tick);
+  }
+
+  // ---- 初始化（每次页面加载） ----
+  function initMusicPlayer() {
+    const player = document.getElementById("music-player");
     if (!player) return;
     player.classList.remove("hidden");
 
-    let currentTrack = 0;
-    let playing = false;
+    const toggle = document.getElementById("music-toggle");
+    const panel = document.getElementById("music-panel");
+    const playBtn = document.getElementById("music-play-btn");
+    const playlistEl = document.getElementById("music-playlist");
+    const volumeEl = document.getElementById("music-volume") as HTMLInputElement;
+
+    // 确保 audio 存在
+    getAudio();
+
+    // 音量同步
+    if (volumeEl) {
+      volumeEl.value = String(audio!.volume * 100);
+      volumeEl.oninput = () => { if (audio) audio.volume = volumeEl.valueAsNumber / 100; };
+    }
 
     // 渲染播放列表
     if (playlistEl) {
@@ -72,41 +146,36 @@
       `).join("");
     }
 
-    function selectTrack(index: number) {
-      currentTrack = index;
-      const track = playlist[index];
-      if (titleEl) titleEl.textContent = track.title;
-      if (artistEl) artistEl.textContent = track.artist;
-    }
-
-    selectTrack(0);
-
-    toggle?.addEventListener("click", () => {
-      panel?.classList.toggle("hidden");
-    });
+    // 事件绑定（每次重建 DOM 都重新绑定）
+    toggle?.addEventListener("click", () => panel?.classList.toggle("hidden"));
 
     playBtn?.addEventListener("click", (e) => {
       e.stopPropagation();
-      playing = !playing;
-      const icon = document.getElementById("play-icon");
-      if (icon) {
-        icon.innerHTML = playing
-          ? '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>'
-          : '<polygon points="5,3 19,12 5,21"/>';
+      const a = getAudio();
+      if (!a.src) {
+        loadTrack(currentTrack, true);
+        return;
       }
-      const disc = player?.querySelector(".music-disc") as HTMLElement;
-      if (disc) disc.style.animationPlayState = playing ? "running" : "paused";
+      if (playing) {
+        a.pause();
+        playing = false;
+      } else {
+        a.play().then(() => { playing = true; syncUI(); }).catch(() => {});
+        playing = true;
+      }
+      syncUI();
     });
 
     playlistEl?.addEventListener("click", (e) => {
       const track = (e.target as HTMLElement).closest(".music-track") as HTMLElement;
       if (track) {
-        selectTrack(parseInt(track.dataset.index || "0"));
-        playing = true;
-        const icon = document.getElementById("play-icon");
-        if (icon) icon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+        const idx = parseInt(track.dataset.index || "0");
+        loadTrack(idx, true);
       }
     });
+
+    syncUI();
+    startProgressLoop();
   }
 
   document.addEventListener("DOMContentLoaded", initMusicPlayer);
