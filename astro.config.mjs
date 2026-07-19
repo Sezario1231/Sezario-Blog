@@ -6,29 +6,33 @@ import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 
 export default defineConfig({
+  experimental: {
+    nodejsCompat: true
+  },
   integrations: [
     react(),
     tailwind({
-      applyBaseStyles: false,
-    }),
+      applyBaseStyles: false
+    })
   ],
   markdown: {
     shikiConfig: {
       theme: "github-dark",
-      wrap: true,
+      wrap: true
     },
     remarkPlugins: [remarkMath],
-    rehypePlugins: [rehypeKatex],
+    rehypePlugins: [rehypeKatex]
   },
   output: "server",
   adapter: cloudflare({
-    session: false,
+    session: false
   }),
   vite: {
     resolve: {
       alias: {
-        "@": "/src",
-      },
-    },
-  },
+        "@astrojs/tailwind": "/src",
+        "@": "/src"
+      }
+    }
+  }
 });
