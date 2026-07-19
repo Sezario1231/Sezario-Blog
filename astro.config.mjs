@@ -21,7 +21,9 @@ export default defineConfig({
     rehypePlugins: [rehypeKatex],
   },
   output: "server",
-  adapter: cloudflare(),
+  adapter: cloudflare({
+    session: false,
+  }),
   vite: {
     resolve: {
       alias: {
