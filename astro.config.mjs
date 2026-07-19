@@ -3,6 +3,7 @@ import react from "@astrojs/react";
 import tailwind from "@astrojs/tailwind";
 import cloudflare from "@astrojs/cloudflare";
 import rehypeKatex from "rehype-katex";
+import remarkMath from "remark-math"; // 补上缺失导入
 
 export default defineConfig({
   compat: {
@@ -29,8 +30,8 @@ export default defineConfig({
   vite: {
     resolve: {
       alias: {
-        "@astrojs/tailwind": "/src",
         "@": "/src"
+        // 删掉错误别名 "@astrojs/tailwind": "/src"，无意义且冲突
       }
     }
   }
