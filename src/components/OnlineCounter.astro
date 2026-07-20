@@ -5,16 +5,83 @@
     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
     <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
   </span>
-  <span>当前 <span id="online-count">1</span> 人在线</span>
+  <span>当前 <span id="online-count">-</span> 人在线</span>
 </div>
 
 <script>
-  function initOnlineCounter() {
-    // 模拟在线人数（实际可用 Supabase Realtime 或其他方案）
-    const count = Math.floor(Math.random() * 5) + 1;
+  let sessionId = localStorage.getItem("online_session_id");
+  if (!sessionId) {
+    sessionId = crypto.randomUUID();
+    localStorage.setItem("online_session_id", sessionId);
+  }
+
+  let heartbeatTimer: ReturnType<typeof setInterval> | null = null;
+  let isDestroyed = false;
+
+  function updateCount(count: number) {
     const el = document.getElementById("online-count");
     if (el) el.textContent = String(count);
   }
+
+  async function sendHeartbeat() {
+    if (isDestroyed) return;
+    try {
+      const res = await fetch("/api/online", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ session_id: sessionId }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        updateCount(data.count);
+      }
+    } catch {}
+  }
+
+  function initOnlineCounter() {
+    isDestroyed = false;
+    sendHeartbeat();
+    heartbeatTimer = setInterval(sendHeartbeat, 30_000);
+
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("beforeunload", onLeave);
+  }
+
+  function destroyOnlineCounter() {
+    isDestroyed = true;
+    if (heartbeatTimer) {
+      clearInterval(heartbeatTimer);
+      heartbeatTimer = null;
+    }
+    document.removeEventListener("visibilitychange", onVisible);
+    window.removeEventListener("beforeunload", onLeave);
+    sendLeave();
+  }
+
+  function onVisible() {
+    if (document.visibilityState === "visible") sendHeartbeat();
+  }
+
+  function onLeave() {
+    navigator.sendBeacon(
+      "/api/online",
+      new Blob([JSON.stringify({ session_id: sessionId })], {
+        type: "application/json",
+      })
+    );
+  }
+
+  async function sendLeave() {
+    try {
+      await fetch("/api/online", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ session_id: sessionId }),
+      });
+    } catch {}
+  }
+
   document.addEventListener("DOMContentLoaded", initOnlineCounter);
   document.addEventListener("astro:page-load", initOnlineCounter);
+  document.addEventListener("astro:before-swap", destroyOnlineCounter);
 </script>
