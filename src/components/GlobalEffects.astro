@@ -21,8 +21,11 @@
 </div>
 
 <script>
-  // ====== 快捷键系统 ======
-  function showToast(text: string) {
+  let lightboxImages = [];
+  let lightboxIndex = 0;
+  let prevController = null;
+
+  function showToast(text) {
     const toast = document.getElementById("shortcut-toast");
     const toastText = document.getElementById("shortcut-toast-text");
     if (!toast || !toastText) return;
@@ -35,59 +38,18 @@
     }, 1500);
   }
 
-  document.addEventListener("keydown", (e) => {
-    // Ctrl+S → 收藏当前页
-    if ((e.ctrlKey || e.metaKey) && e.key === "s") {
-      e.preventDefault();
-      const url = window.location.href;
-      const title = document.title;
-      try {
-        const bookmarks = JSON.parse(localStorage.getItem("bookmarks") || "[]");
-        const exists = bookmarks.some((b: any) => b.url === url);
-        if (!exists) {
-          bookmarks.push({ url, title, date: new Date().toISOString() });
-          localStorage.setItem("bookmarks", JSON.stringify(bookmarks));
-          showToast("已收藏此页面");
-        } else {
-          showToast("已在收藏中");
-        }
-      } catch {}
-    }
-
-    // Ctrl+\ → 切换主题
-    if ((e.ctrlKey || e.metaKey) && e.key === "\\") {
-      e.preventDefault();
-      const toggleBtn = document.querySelector("[aria-label='切换主题']") as HTMLButtonElement;
-      if (toggleBtn) toggleBtn.click();
-      showToast("切换主题");
-    }
-
-    // E → 编辑（如果有编辑链接）
-    if (e.key === "e" && !e.ctrlKey && !e.metaKey && !isTyping()) {
-      const editLink = document.querySelector("[data-edit-url]") as HTMLAnchorElement;
-      if (editLink) {
-        window.open(editLink.dataset.editUrl, "_blank");
-      }
-    }
-  });
-
   function isTyping() {
     const el = document.activeElement;
-    return el?.tagName === "INPUT" || el?.tagName === "TEXTAREA" || (el as HTMLElement)?.isContentEditable;
+    return el?.tagName === "INPUT" || el?.tagName === "TEXTAREA" || el?.isContentEditable;
   }
 
-  // ====== 图片灯箱 ======
-  let lightboxImages: HTMLImageElement[] = [];
-  let lightboxIndex = 0;
-
-  function openLightbox(img: HTMLImageElement) {
+  function openLightbox(img) {
     const lightbox = document.getElementById("lightbox");
-    const lightboxImg = document.getElementById("lightbox-img") as HTMLImageElement;
+    const lightboxImg = document.getElementById("lightbox-img");
     const caption = document.getElementById("lightbox-caption");
     if (!lightbox || !lightboxImg) return;
 
-    // 收集页面上所有可点击的图片
-    lightboxImages = Array.from(document.querySelectorAll(".prose img, .article-content img")) as HTMLImageElement[];
+    lightboxImages = Array.from(document.querySelectorAll(".prose img, .article-content img"));
     lightboxIndex = lightboxImages.indexOf(img);
 
     lightboxImg.src = img.src;
@@ -105,11 +67,11 @@
     }
   }
 
-  function navigateLightbox(dir: number) {
+  function navigateLightbox(dir) {
     if (lightboxImages.length === 0) return;
     lightboxIndex = (lightboxIndex + dir + lightboxImages.length) % lightboxImages.length;
     const img = lightboxImages[lightboxIndex];
-    const lightboxImg = document.getElementById("lightbox-img") as HTMLImageElement;
+    const lightboxImg = document.getElementById("lightbox-img");
     const caption = document.getElementById("lightbox-caption");
     if (lightboxImg) {
       lightboxImg.src = img.src;
@@ -118,28 +80,65 @@
     if (caption) caption.textContent = img.alt || "";
   }
 
-  function initLightbox() {
+  function initGlobalEffects() {
+    if (prevController) prevController.abort();
+    const ac = new AbortController();
+    prevController = ac;
+    const { signal } = ac;
+
+    document.addEventListener("keydown", (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+        e.preventDefault();
+        const url = window.location.href;
+        const title = document.title;
+        try {
+          const bookmarks = JSON.parse(localStorage.getItem("bookmarks") || "[]");
+          const exists = bookmarks.some((b) => b.url === url);
+          if (!exists) {
+            bookmarks.push({ url, title, date: new Date().toISOString() });
+            localStorage.setItem("bookmarks", JSON.stringify(bookmarks));
+            showToast("已收藏此页面");
+          } else {
+            showToast("已在收藏中");
+          }
+        } catch {}
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.key === "\\") {
+        e.preventDefault();
+        const toggleBtn = document.querySelector("[aria-label='切换主题']");
+        if (toggleBtn) toggleBtn.click();
+        showToast("切换主题");
+      }
+
+      if (e.key === "e" && !e.ctrlKey && !e.metaKey && !isTyping()) {
+        const editLink = document.querySelector("[data-edit-url]");
+        if (editLink) {
+          window.open(editLink.dataset.editUrl, "_blank");
+        }
+      }
+    }, { signal });
+
+    document.getElementById("lightbox-close")?.addEventListener("click", closeLightbox, { signal });
+    document.getElementById("lightbox-prev")?.addEventListener("click", () => navigateLightbox(-1), { signal });
+    document.getElementById("lightbox-next")?.addEventListener("click", () => navigateLightbox(1), { signal });
+    document.getElementById("lightbox")?.addEventListener("click", (e) => {
+      if (e.target === e.currentTarget) closeLightbox();
+    }, { signal });
+
+    document.addEventListener("keydown", (e) => {
+      if (document.getElementById("lightbox")?.classList.contains("hidden")) return;
+      if (e.key === "Escape") closeLightbox();
+      if (e.key === "ArrowLeft") navigateLightbox(-1);
+      if (e.key === "ArrowRight") navigateLightbox(1);
+    }, { signal });
+
     document.querySelectorAll(".prose img, .article-content img").forEach((img) => {
-      const image = img as HTMLImageElement;
-      image.style.cursor = "zoom-in";
-      image.addEventListener("click", () => openLightbox(image));
+      img.style.cursor = "zoom-in";
+      img.addEventListener("click", () => openLightbox(img), { signal });
     });
   }
 
-  document.getElementById("lightbox-close")?.addEventListener("click", closeLightbox);
-  document.getElementById("lightbox-prev")?.addEventListener("click", () => navigateLightbox(-1));
-  document.getElementById("lightbox-next")?.addEventListener("click", () => navigateLightbox(1));
-  document.getElementById("lightbox")?.addEventListener("click", (e) => {
-    if (e.target === e.currentTarget) closeLightbox();
-  });
-
-  document.addEventListener("keydown", (e) => {
-    if (document.getElementById("lightbox")?.classList.contains("hidden")) return;
-    if (e.key === "Escape") closeLightbox();
-    if (e.key === "ArrowLeft") navigateLightbox(-1);
-    if (e.key === "ArrowRight") navigateLightbox(1);
-  });
-
-  document.addEventListener("DOMContentLoaded", initLightbox);
-  document.addEventListener("astro:page-load", initLightbox);
+  document.addEventListener("DOMContentLoaded", initGlobalEffects);
+  document.addEventListener("astro:page-load", initGlobalEffects);
 </script>
