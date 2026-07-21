@@ -1,0 +1,12 @@
+name = "sezario-blog"
+main = "dist/_worker.js"
+compatibility_date = "2026-07-19"
+compatibility_flags = ["nodejs_compat"]
+
+workers_dev = true
+
+[vars]
+SUPABASE_URL = "https://lckftybogvxbacaeuaxc.supabase.co"
+PUBLIC_SITE_URL = "https://sezario-blog.pages.dev"
+PUBLIC_SUPABASE_URL = "https://lckftybogvxbacaeuaxc.supabase.co"
+PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxja2Z0eWJvZ3Z4YmFjYWV1YXhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzNjI2OTYsImV4cCI6MjA5OTkzODY5Nn0.aD_-LplCcXihYJTJB3H3UkH1ey0vOcZe9QZOyXyyQ2o"
