@@ -15,6 +15,7 @@
     <a href="/" class="mobile-nav-link px-4 py-3 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-all">首页</a>
     <a href="/posts" class="mobile-nav-link px-4 py-3 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-all">文章</a>
     <a href="/projects" class="mobile-nav-link px-4 py-3 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-all">项目</a>
+    <a href="/friends" class="mobile-nav-link px-4 py-3 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-all">友链</a>
     <a href="/archive" class="mobile-nav-link px-4 py-3 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-all">归档</a>
     <a href="/about" class="mobile-nav-link px-4 py-3 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-all">关于</a>
     <a href="/contact" class="mobile-nav-link px-4 py-3 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-all">联系</a>
@@ -22,30 +23,31 @@
 </aside>
 
 <script>
-  const overlay = document.querySelector(".mobile-menu-overlay") as HTMLElement;
-  const drawer = document.querySelector(".mobile-menu-drawer") as HTMLElement;
-  const openBtn = document.querySelector(".mobile-menu-open");
-  const closeBtn = document.querySelector(".mobile-menu-close");
-
   function openMenu() {
-    overlay.classList.remove("opacity-0", "pointer-events-none");
-    overlay.classList.add("opacity-100", "pointer-events-auto");
-    drawer.classList.remove("translate-x-full");
-    drawer.classList.add("translate-x-0");
+    const overlay = document.querySelector(".mobile-menu-overlay") as HTMLElement;
+    const drawer = document.querySelector(".mobile-menu-drawer") as HTMLElement;
+    overlay?.classList.remove("opacity-0", "pointer-events-none");
+    overlay?.classList.add("opacity-100", "pointer-events-auto");
+    drawer?.classList.remove("translate-x-full");
+    drawer?.classList.add("translate-x-0");
     document.body.style.overflow = "hidden";
   }
 
   function closeMenu() {
-    overlay.classList.add("opacity-0", "pointer-events-none");
-    overlay.classList.remove("opacity-100", "pointer-events-auto");
-    drawer.classList.add("translate-x-full");
-    drawer.classList.remove("translate-x-0");
+    const overlay = document.querySelector(".mobile-menu-overlay") as HTMLElement;
+    const drawer = document.querySelector(".mobile-menu-drawer") as HTMLElement;
+    overlay?.classList.add("opacity-0", "pointer-events-none");
+    overlay?.classList.remove("opacity-100", "pointer-events-auto");
+    drawer?.classList.add("translate-x-full");
+    drawer?.classList.remove("translate-x-0");
     document.body.style.overflow = "";
   }
 
-  openBtn?.addEventListener("click", openMenu);
-  closeBtn?.addEventListener("click", closeMenu);
-  overlay?.addEventListener("click", closeMenu);
+  document.addEventListener("click", (e) => {
+    const target = e.target as HTMLElement;
+    if (target.closest(".mobile-menu-open")) openMenu();
+    if (target.closest(".mobile-menu-close") || target.closest(".mobile-menu-overlay")) closeMenu();
+  });
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closeMenu();
   });

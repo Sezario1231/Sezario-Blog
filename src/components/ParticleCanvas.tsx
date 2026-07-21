@@ -92,14 +92,28 @@ export default function ParticleCanvas() {
       mouse.x = -1000;
       mouse.y = -1000;
     };
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        cancelAnimationFrame(animationId);
+      } else {
+        draw();
+      }
+    };
     window.addEventListener("mousemove", handleMouseMove, { passive: true });
     document.addEventListener("mouseleave", handleMouseLeave);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    // 移动端无鼠标交互时跳过渲染
+    if (isMobile && MOUSE_RADIUS === 0) {
+      cancelAnimationFrame(animationId);
+    }
 
     return () => {
       cancelAnimationFrame(animationId);
       window.removeEventListener("resize", resize);
       window.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseleave", handleMouseLeave);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
 

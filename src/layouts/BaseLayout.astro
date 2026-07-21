@@ -6,7 +6,6 @@ import AuroraBackground from "@/components/AuroraBackground.astro";
 import ParticleCanvas from "@/components/ParticleCanvas";
 import GlobalEffects from "@/components/GlobalEffects.astro";
 import EasterEggs from "@/components/EasterEggs.astro";
-import CosmicEnding from "@/components/CosmicEnding.astro";
 import MusicPlayer from "@/components/MusicPlayer.astro";
 import { ViewTransitions } from "astro:transitions";
 
@@ -29,6 +28,7 @@ const ogImage = image ? (image.startsWith("http") ? image : `${siteUrl}${image}`
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description ?? title} />
+    <link rel="canonical" href={pageUrl} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
     <!-- Open Graph -->
@@ -61,12 +61,7 @@ const ogImage = image ? (image.startsWith("http") ? image : `${siteUrl}${image}`
       }),
     })} />
 
-    <!-- 字体预加载 -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" media="print" onload="this.media='all'" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
+    <link rel="stylesheet" href="/katex.min.css" />
 
     <!-- 路由预取 -->
     <meta name="astro-prefetch" content="hover" />
@@ -117,7 +112,6 @@ const ogImage = image ? (image.startsWith("http") ? image : `${siteUrl}${image}`
     </button>
     <GlobalEffects />
     <EasterEggs />
-    <CosmicEnding />
     <MusicPlayer />
   </body>
 </html>
