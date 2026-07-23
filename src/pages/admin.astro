@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
+import MarkdownEditor from "@/components/admin/MarkdownEditor.tsx";
 export const prerender = false;
 ---
 
@@ -41,13 +42,16 @@ export const prerender = false;
       <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap text-muted-foreground/60 hover:bg-muted/30" data-tab="projects">项目管理</button>
       <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap text-muted-foreground/60 hover:bg-muted/30" data-tab="quotes">名言管理</button>
       <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap text-muted-foreground/60 hover:bg-muted/30" data-tab="settings">站点设置</button>
+      <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap text-muted-foreground/60 hover:bg-muted/30" data-tab="contacts">留言管理</button>
+      <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap text-muted-foreground/60 hover:bg-muted/30" data-tab="comments">评论管理</button>
+      <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap text-muted-foreground/60 hover:bg-muted/30" data-tab="export">数据导出</button>
       <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap text-muted-foreground/60 hover:bg-muted/30" data-tab="plugins">插件管理</button>
       <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap text-muted-foreground/60 hover:bg-muted/30" data-tab="appearance">主题外观</button>
     </div>
 
     <!-- ===== 数据看板 ===== -->
     <div class="tab-panel" id="panel-dashboard">
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div class="p-5 rounded-xl border border-border/40 bg-card/50">
           <p class="text-xs text-muted-foreground/60 mb-1">已发布文章</p>
           <p class="text-2xl font-bold text-primary" id="stat-published">-</p>
@@ -63,6 +67,36 @@ export const prerender = false;
         <div class="p-5 rounded-xl border border-border/40 bg-card/50">
           <p class="text-xs text-muted-foreground/60 mb-1">名言</p>
           <p class="text-2xl font-bold text-yellow-500" id="stat-quotes">-</p>
+        </div>
+        <div class="p-5 rounded-xl border border-border/40 bg-card/50">
+          <p class="text-xs text-muted-foreground/60 mb-1">留言</p>
+          <p class="text-2xl font-bold text-sky-500" id="stat-contacts">-</p>
+        </div>
+        <div class="p-5 rounded-xl border border-border/40 bg-card/50">
+          <p class="text-xs text-muted-foreground/60 mb-1">未读留言</p>
+          <p class="text-2xl font-bold text-red-500" id="stat-unread">-</p>
+        </div>
+        <div class="p-5 rounded-xl border border-border/40 bg-card/50">
+          <p class="text-xs text-muted-foreground/60 mb-1">评论</p>
+          <p class="text-2xl font-bold text-violet-500" id="stat-comments">-</p>
+        </div>
+        <div class="p-5 rounded-xl border border-border/40 bg-card/50">
+          <p class="text-xs text-muted-foreground/60 mb-1">在线访客</p>
+          <p class="text-2xl font-bold text-cyan-500" id="stat-visitors">-</p>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="p-5 rounded-xl border border-border/40 bg-card/50">
+          <h3 class="text-sm font-semibold mb-3">最新文章</h3>
+          <div id="recent-posts" class="space-y-2">
+            <p class="text-xs text-muted-foreground/40">加载中...</p>
+          </div>
+        </div>
+        <div class="p-5 rounded-xl border border-border/40 bg-card/50">
+          <h3 class="text-sm font-semibold mb-3">最新评论</h3>
+          <div id="recent-comments" class="space-y-2">
+            <p class="text-xs text-muted-foreground/40">加载中...</p>
+          </div>
         </div>
       </div>
     </div>
@@ -82,17 +116,24 @@ export const prerender = false;
         <table class="w-full text-sm">
           <thead>
             <tr class="bg-muted/30 border-b border-border/40">
+              <th class="w-10 px-2 py-3"><input type="checkbox" id="posts-select-all" class="rounded border-border/40 accent-primary" /></th>
               <th class="text-left px-4 py-3 font-medium text-muted-foreground/70">标题</th>
               <th class="text-left px-4 py-3 font-medium text-muted-foreground/70 hidden sm:table-cell">分类</th>
               <th class="text-left px-4 py-3 font-medium text-muted-foreground/70 hidden md:table-cell">状态</th>
               <th class="text-left px-4 py-3 font-medium text-muted-foreground/70 hidden md:table-cell">日期</th>
-              <th class="text-right px-4 py-3 font-medium text-muted-foreground/70">操作</th>
+              <th class="text-right px-4 py-3 font-medium text-muted-foreground/70 pr-2">操作</th>
             </tr>
           </thead>
           <tbody id="posts-tbody">
-            <tr><td colspan="5" class="px-4 py-8 text-center text-sm text-muted-foreground/40">加载中...</td></tr>
+            <tr><td colspan="6" class="px-4 py-8 text-center text-sm text-muted-foreground/40">加载中...</td></tr>
           </tbody>
         </table>
+      </div>
+      <div id="posts-batch-bar" class="flex items-center gap-2 mt-3 hidden">
+        <span class="text-xs text-muted-foreground/60 mr-1" id="posts-selected-count">已选 0 项</span>
+        <button class="px-3 py-1.5 rounded-lg bg-red-500/80 text-white text-xs font-medium hover:bg-red-500 transition-colors batch-btn" data-type="posts" data-action="delete">批量删除</button>
+        <button class="px-3 py-1.5 rounded-lg bg-emerald-500/80 text-white text-xs font-medium hover:bg-emerald-500 transition-colors batch-btn" data-type="posts" data-action="publish">批量发布</button>
+        <button class="px-3 py-1.5 rounded-lg bg-orange-400/80 text-white text-xs font-medium hover:bg-orange-400 transition-colors batch-btn" data-type="posts" data-action="draft">标记草稿</button>
       </div>
       <p class="text-xs text-muted-foreground/40 mt-3" id="post-count"></p>
     </div>
@@ -107,16 +148,21 @@ export const prerender = false;
         <table class="w-full text-sm">
           <thead>
             <tr class="bg-muted/30 border-b border-border/40">
+              <th class="w-10 px-2 py-3"><input type="checkbox" id="projects-select-all" class="rounded border-border/40 accent-primary" /></th>
               <th class="text-left px-4 py-3 font-medium text-muted-foreground/70">名称</th>
               <th class="text-left px-4 py-3 font-medium text-muted-foreground/70 hidden sm:table-cell">技术栈</th>
               <th class="text-left px-4 py-3 font-medium text-muted-foreground/70 hidden md:table-cell">GitHub</th>
-              <th class="text-right px-4 py-3 font-medium text-muted-foreground/70">操作</th>
+              <th class="text-right px-4 py-3 font-medium text-muted-foreground/70 pr-2">操作</th>
             </tr>
           </thead>
           <tbody id="projects-tbody">
-            <tr><td colspan="4" class="px-4 py-8 text-center text-sm text-muted-foreground/40">加载中...</td></tr>
+            <tr><td colspan="5" class="px-4 py-8 text-center text-sm text-muted-foreground/40">加载中...</td></tr>
           </tbody>
         </table>
+      </div>
+      <div id="projects-batch-bar" class="flex items-center gap-2 mt-3 hidden">
+        <span class="text-xs text-muted-foreground/60 mr-1" id="projects-selected-count">已选 0 项</span>
+        <button class="px-3 py-1.5 rounded-lg bg-red-500/80 text-white text-xs font-medium hover:bg-red-500 transition-colors batch-btn" data-type="projects" data-action="delete">批量删除</button>
       </div>
     </div>
 
@@ -130,15 +176,20 @@ export const prerender = false;
         <table class="w-full text-sm">
           <thead>
             <tr class="bg-muted/30 border-b border-border/40">
+              <th class="w-10 px-2 py-3"><input type="checkbox" id="quotes-select-all" class="rounded border-border/40 accent-primary" /></th>
               <th class="text-left px-4 py-3 font-medium text-muted-foreground/70">内容</th>
               <th class="text-left px-4 py-3 font-medium text-muted-foreground/70 hidden sm:table-cell">作者</th>
-              <th class="text-right px-4 py-3 font-medium text-muted-foreground/70">操作</th>
+              <th class="text-right px-4 py-3 font-medium text-muted-foreground/70 pr-2">操作</th>
             </tr>
           </thead>
           <tbody id="quotes-tbody">
-            <tr><td colspan="3" class="px-4 py-8 text-center text-sm text-muted-foreground/40">加载中...</td></tr>
+            <tr><td colspan="4" class="px-4 py-8 text-center text-sm text-muted-foreground/40">加载中...</td></tr>
           </tbody>
         </table>
+      </div>
+      <div id="quotes-batch-bar" class="flex items-center gap-2 mt-3 hidden">
+        <span class="text-xs text-muted-foreground/60 mr-1" id="quotes-selected-count">已选 0 项</span>
+        <button class="px-3 py-1.5 rounded-lg bg-red-500/80 text-white text-xs font-medium hover:bg-red-500 transition-colors batch-btn" data-type="quotes" data-action="delete">批量删除</button>
       </div>
     </div>
 
@@ -199,6 +250,96 @@ export const prerender = false;
         </div>
         <button id="save-settings" class="px-6 py-2.5 rounded-xl bg-primary/80 text-white text-sm font-medium hover:bg-primary/90 transition-colors">保存设置</button>
         <p id="settings-saved" class="text-xs text-green-500 hidden">已保存</p>
+      </div>
+    </div>
+
+    <!-- ===== 留言管理 ===== -->
+    <div class="tab-panel hidden" id="panel-contacts">
+      <div class="flex items-center gap-3 mb-4">
+        <input type="text" id="contact-search" placeholder="搜索姓名或邮箱..." class="flex-1 px-4 py-2 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none focus:border-primary/40" />
+        <select id="contact-status-filter" class="px-3 py-2 rounded-xl border border-border/40 bg-card/50 text-sm focus:outline-none">
+          <option value="">全部</option>
+          <option value="unread">未读</option>
+        </select>
+      </div>
+      <div class="border border-border/40 rounded-xl overflow-hidden">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-muted/30 border-b border-border/40">
+              <th class="w-10 px-2 py-3"><input type="checkbox" id="contacts-select-all" class="rounded border-border/40 accent-primary" /></th>
+              <th class="text-left px-4 py-3 font-medium text-muted-foreground/70">姓名</th>
+              <th class="text-left px-4 py-3 font-medium text-muted-foreground/70 hidden sm:table-cell">邮箱</th>
+              <th class="text-left px-4 py-3 font-medium text-muted-foreground/70 hidden md:table-cell">内容</th>
+              <th class="text-left px-4 py-3 font-medium text-muted-foreground/70 hidden md:table-cell">日期</th>
+              <th class="text-right px-4 py-3 font-medium text-muted-foreground/70 pr-2">操作</th>
+            </tr>
+          </thead>
+          <tbody id="contacts-tbody">
+            <tr><td colspan="6" class="px-4 py-8 text-center text-sm text-muted-foreground/40">加载中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div id="contacts-batch-bar" class="flex items-center gap-2 mt-3 hidden">
+        <span class="text-xs text-muted-foreground/60 mr-1" id="contacts-selected-count">已选 0 项</span>
+        <button class="px-3 py-1.5 rounded-lg bg-red-500/80 text-white text-xs font-medium hover:bg-red-500 transition-colors batch-btn" data-type="contacts" data-action="delete">批量删除</button>
+        <button class="px-3 py-1.5 rounded-lg bg-primary/80 text-white text-xs font-medium hover:bg-primary/90 transition-colors batch-btn" data-type="contacts" data-action="read">标记已读</button>
+      </div>
+      <div class="flex items-center justify-between mt-3">
+        <p class="text-xs text-muted-foreground/40" id="contact-count"></p>
+        <div class="flex gap-2" id="contact-pagination">
+          <button id="contact-prev" class="px-3 py-1 rounded-lg border border-border/40 text-xs text-muted-foreground/60 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed" disabled>上一页</button>
+          <button id="contact-next" class="px-3 py-1 rounded-lg border border-border/40 text-xs text-muted-foreground/60 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed" disabled>下一页</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 评论管理 ===== -->
+    <div class="tab-panel hidden" id="panel-comments">
+      <div class="border border-border/40 rounded-xl overflow-hidden">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-muted/30 border-b border-border/40">
+              <th class="w-10 px-2 py-3"><input type="checkbox" id="comments-select-all" class="rounded border-border/40 accent-primary" /></th>
+              <th class="text-left px-4 py-3 font-medium text-muted-foreground/70">作者</th>
+              <th class="text-left px-4 py-3 font-medium text-muted-foreground/70 hidden sm:table-cell">内容</th>
+              <th class="text-left px-4 py-3 font-medium text-muted-foreground/70 hidden md:table-cell">文章</th>
+              <th class="text-left px-4 py-3 font-medium text-muted-foreground/70 hidden md:table-cell">日期</th>
+              <th class="text-right px-4 py-3 font-medium text-muted-foreground/70 pr-2">操作</th>
+            </tr>
+          </thead>
+          <tbody id="comments-tbody">
+            <tr><td colspan="6" class="px-4 py-8 text-center text-sm text-muted-foreground/40">加载中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div id="comments-batch-bar" class="flex items-center gap-2 mt-3 hidden">
+        <span class="text-xs text-muted-foreground/60 mr-1" id="comments-selected-count">已选 0 项</span>
+        <button class="px-3 py-1.5 rounded-lg bg-red-500/80 text-white text-xs font-medium hover:bg-red-500 transition-colors batch-btn" data-type="comments" data-action="delete">批量删除</button>
+      </div>
+      <div class="flex items-center justify-between mt-3">
+        <p class="text-xs text-muted-foreground/40" id="comment-count"></p>
+        <div class="flex gap-2" id="comment-pagination">
+          <button id="comment-prev" class="px-3 py-1 rounded-lg border border-border/40 text-xs text-muted-foreground/60 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed" disabled>上一页</button>
+          <button id="comment-next" class="px-3 py-1 rounded-lg border border-border/40 text-xs text-muted-foreground/60 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed" disabled>下一页</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 数据导出 ===== -->
+    <div class="tab-panel hidden" id="panel-export">
+      <div class="max-w-lg space-y-4">
+        <p class="text-sm text-muted-foreground/60">一键导出站点数据为 JSON 文件，可用于备份或迁移。</p>
+        <div class="grid grid-cols-1 gap-3">
+          {["posts", "projects", "quotes", "comments", "contacts", "settings"].map((t) => (
+            <div class="flex items-center justify-between p-4 rounded-xl border border-border/40 bg-card/50">
+              <div>
+                <p class="text-sm font-medium">{{ posts: "文章", projects: "项目", quotes: "名言", comments: "评论", contacts: "留言", settings: "站点设置" }[t]}</p>
+                <p class="text-xs text-muted-foreground/60">导出所有 {t === "posts" ? "文章" : t === "projects" ? "项目" : t === "quotes" ? "名言" : t === "comments" ? "评论" : t === "contacts" ? "留言" : "设置"} 数据</p>
+              </div>
+              <button class="export-btn px-4 py-2 rounded-xl bg-primary/80 text-white text-xs font-medium hover:bg-primary/90 transition-colors" data-type={t}>导出 JSON</button>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
 
@@ -284,7 +425,7 @@ export const prerender = false;
 
     <!-- ===== 文章编辑器 Modal ===== -->
     <div id="post-editor-overlay" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4">
-      <div class="bg-card border border-border/40 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
+      <div class="bg-card border border-border/40 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl">
         <div class="flex items-center justify-between px-6 py-4 border-b border-border/30">
           <h2 class="text-lg font-bold" id="post-editor-title">新建文章</h2>
           <button id="post-editor-close" class="text-muted-foreground/60 hover:text-primary transition-colors">
@@ -313,7 +454,10 @@ export const prerender = false;
           </div>
           <div>
             <label class="text-sm font-medium block mb-1.5">正文（Markdown）</label>
-            <textarea id="pe-body" rows="12" class="w-full px-4 py-2.5 rounded-xl border border-border/40 bg-card/50 text-sm font-mono focus:outline-none focus:border-primary/40 resize-y"></textarea>
+            <textarea id="pe-body" class="hidden"></textarea>
+            <div id="md-editor-container">
+              <MarkdownEditor client:load />
+            </div>
           </div>
           <div class="flex items-center gap-2">
             <input type="checkbox" id="pe-draft" class="rounded border-border/40" />
@@ -534,6 +678,10 @@ export const prerender = false;
   let allProjects: any[] = [];
   let allQuotes: any[] = [];
   let allSettings: Record<string, any> = {};
+  let allContacts: any[] = [];
+  let allCommentsAdmin: any[] = [];
+  let contactPage = 1;
+  let commentPage = 1;
 
   async function loadAllData() {
     await Promise.allSettled([
@@ -541,18 +689,57 @@ export const prerender = false;
       loadProjects(),
       loadQuotes(),
       loadSettings(),
+      loadDashboardStats(),
     ]);
   }
 
   // ----- Dashboard -----
+  async function loadDashboardStats() {
+    try {
+      const stats = await apiGet("/api/admin/stats");
+      const el = (id: string) => document.getElementById(id);
+      if (el("stat-published")) el("stat-published")!.textContent = String(stats.posts ?? 0);
+      if (el("stat-drafts")) el("stat-drafts")!.textContent = String(stats.drafts ?? 0);
+      if (el("stat-projects")) el("stat-projects")!.textContent = String(stats.projects ?? 0);
+      if (el("stat-quotes")) el("stat-quotes")!.textContent = String(stats.quotes ?? 0);
+      if (el("stat-contacts")) el("stat-contacts")!.textContent = String(stats.contacts ?? 0);
+      if (el("stat-unread")) el("stat-unread")!.textContent = String(stats.unreadContacts ?? 0);
+      if (el("stat-comments")) el("stat-comments")!.textContent = String(stats.comments ?? 0);
+      if (el("stat-visitors")) el("stat-visitors")!.textContent = String(stats.onlineVisitors ?? 0);
+
+      const recentPostsEl = document.getElementById("recent-posts");
+      if (recentPostsEl && stats.recentPosts?.length) {
+        recentPostsEl.innerHTML = stats.recentPosts.map((p: any) =>
+          `<div class="flex items-center justify-between py-1.5 border-b border-border/20 last:border-0">
+            <span class="text-sm truncate flex-1 ${p.draft ? "text-orange-400/70" : ""}">${esc(p.title || "")}</span>
+            <span class="text-[10px] text-muted-foreground/40 ml-2">${p.created_at ? new Date(p.created_at).toLocaleDateString("zh-CN") : ""}</span>
+          </div>`
+        ).join("");
+      } else if (recentPostsEl) {
+        recentPostsEl.innerHTML = '<p class="text-xs text-muted-foreground/40">暂无文章</p>';
+      }
+
+      const recentCommentsEl = document.getElementById("recent-comments");
+      if (recentCommentsEl && stats.recentComments?.length) {
+        recentCommentsEl.innerHTML = stats.recentComments.map((c: any) =>
+          `<div class="py-1.5 border-b border-border/20 last:border-0">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-medium">${esc(c.author || "匿名")}</span>
+              <span class="text-[10px] text-muted-foreground/40">于 ${c.post_slug || "未知文章"}</span>
+            </div>
+            <p class="text-xs text-muted-foreground/60 truncate mt-0.5">${esc(c.content || "")}</p>
+          </div>`
+        ).join("");
+      } else if (recentCommentsEl) {
+        recentCommentsEl.innerHTML = '<p class="text-xs text-muted-foreground/40">暂无评论</p>';
+      }
+    } catch {
+      // fallback silent
+    }
+  }
+
   function updateDashboard() {
-    const published = allPosts.filter((p) => !p.draft);
-    const drafts = allPosts.filter((p) => p.draft);
-    const el = (id: string) => document.getElementById(id);
-    if (el("stat-published")) el("stat-published")!.textContent = String(published.length);
-    if (el("stat-drafts")) el("stat-drafts")!.textContent = String(drafts.length);
-    if (el("stat-projects")) el("stat-projects")!.textContent = String(allProjects.length);
-    if (el("stat-quotes")) el("stat-quotes")!.textContent = String(allQuotes.length);
+    loadDashboardStats();
   }
 
   // ----- Posts -----
@@ -578,15 +765,16 @@ export const prerender = false;
     });
 
     if (!filtered.length) {
-      tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-sm text-muted-foreground/40">暂无文章</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-sm text-muted-foreground/40">暂无文章</td></tr>';
     } else {
       tbody.innerHTML = filtered.map((p) => `
         <tr class="border-b border-border/30 hover:bg-muted/20 transition-colors">
+          <td class="px-2 py-3"><input type="checkbox" class="row-checkbox posts-checkbox rounded border-border/40 accent-primary" value="${p.id}" /></td>
           <td class="px-4 py-3"><span class="line-clamp-1">${esc(p.title || "")}</span></td>
           <td class="px-4 py-3 hidden sm:table-cell"><span class="text-xs px-2 py-0.5 rounded-full bg-primary/8 text-primary/80">${esc(p.category || "未分类")}</span></td>
           <td class="px-4 py-3 hidden md:table-cell"><span class="text-xs px-2 py-0.5 rounded-full ${p.draft ? "bg-orange-400/10 text-orange-400" : "bg-emerald-500/10 text-emerald-500"}">${p.draft ? "草稿" : "已发布"}</span></td>
           <td class="px-4 py-3 text-xs text-muted-foreground/60 hidden md:table-cell">${p.created_at ? new Date(p.created_at).toLocaleDateString("zh-CN") : "-"}</td>
-          <td class="px-4 py-3 text-right space-x-2">
+          <td class="px-4 py-3 text-right space-x-2 pr-2">
             <button class="text-xs text-primary hover:text-primary/80 transition-colors post-edit" data-id="${p.id}">编辑</button>
             <button class="text-xs text-red-500 hover:text-red-600 transition-colors post-del" data-id="${p.id}">删除</button>
           </td>
@@ -617,7 +805,9 @@ export const prerender = false;
     (document.getElementById("pe-description") as HTMLInputElement).value = data?.description || "";
     (document.getElementById("pe-category") as HTMLInputElement).value = data?.category || "";
     (document.getElementById("pe-tags") as HTMLInputElement).value = Array.isArray(data?.tags) ? data.tags.join(", ") : (data?.tags || "");
-    (document.getElementById("pe-body") as HTMLTextAreaElement).value = data?.body || "";
+    const body = data?.body || "";
+    (document.getElementById("pe-body") as HTMLTextAreaElement).value = body;
+    window.dispatchEvent(new CustomEvent("editor-setvalue", { detail: body }));
     (document.getElementById("pe-draft") as HTMLInputElement).checked = data?.draft ?? true;
   }
 
@@ -699,14 +889,15 @@ export const prerender = false;
     const filtered = allProjects.filter((p) => !q || p.name?.toLowerCase().includes(q));
 
     if (!filtered.length) {
-      tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-8 text-center text-sm text-muted-foreground/40">暂无项目</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-sm text-muted-foreground/40">暂无项目</td></tr>';
     } else {
       tbody.innerHTML = filtered.map((p) => `
         <tr class="border-b border-border/30 hover:bg-muted/20 transition-colors">
+          <td class="px-2 py-3"><input type="checkbox" class="row-checkbox projects-checkbox rounded border-border/40 accent-primary" value="${p.id}" /></td>
           <td class="px-4 py-3 font-medium">${esc(p.name || "")}</td>
           <td class="px-4 py-3 hidden sm:table-cell"><div class="flex flex-wrap gap-1">${(Array.isArray(p.tech_stack) ? p.tech_stack : []).map((t: string) => `<span class="text-[10px] px-1.5 py-0.5 rounded bg-muted/50 text-muted-foreground/60">${esc(t)}</span>`).join("")}</div></td>
           <td class="px-4 py-3 hidden md:table-cell text-xs text-muted-foreground/60 truncate max-w-[200px]">${p.github ? `<a href="${esc(p.github)}" target="_blank" class="hover:text-primary transition-colors">${esc(p.github)}</a>` : "-"}</td>
-          <td class="px-4 py-3 text-right space-x-2">
+          <td class="px-4 py-3 text-right space-x-2 pr-2">
             <button class="text-xs text-primary hover:text-primary/80 transition-colors proj-edit" data-id="${p.id}">编辑</button>
             <button class="text-xs text-red-500 hover:text-red-600 transition-colors proj-del" data-id="${p.id}">删除</button>
           </td>
@@ -814,13 +1005,14 @@ export const prerender = false;
     const filtered = allQuotes.filter((x) => !q || x.text?.toLowerCase().includes(q) || x.author?.toLowerCase().includes(q));
 
     if (!filtered.length) {
-      tbody.innerHTML = '<tr><td colspan="3" class="px-4 py-8 text-center text-sm text-muted-foreground/40">暂无名言</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-8 text-center text-sm text-muted-foreground/40">暂无名言</td></tr>';
     } else {
       tbody.innerHTML = filtered.map((x) => `
         <tr class="border-b border-border/30 hover:bg-muted/20 transition-colors">
+          <td class="px-2 py-3"><input type="checkbox" class="row-checkbox quotes-checkbox rounded border-border/40 accent-primary" value="${x.id}" /></td>
           <td class="px-4 py-3 line-clamp-2">${esc(x.text || "")}</td>
           <td class="px-4 py-3 text-xs text-muted-foreground/60 hidden sm:table-cell">${esc(x.author || "Unknown")}</td>
-          <td class="px-4 py-3 text-right"><button class="text-xs text-red-500 hover:text-red-600 transition-colors quote-del" data-id="${x.id}">删除</button></td>
+          <td class="px-4 py-3 text-right pr-2"><button class="text-xs text-red-500 hover:text-red-600 transition-colors quote-del" data-id="${x.id}">删除</button></td>
         </tr>
       `).join("");
     }
@@ -925,6 +1117,270 @@ export const prerender = false;
     }
   });
 
+  // ===== Contacts Management =====
+  async function loadContacts() {
+    try {
+      const result = await apiGet(`/api/admin/contacts?page=${contactPage}&pageSize=15`);
+      allContacts = result.data || [];
+      renderContacts(result.total);
+    } catch { allContacts = []; renderContacts(0); }
+  }
+
+  function renderContacts(total: number) {
+    const tbody = document.getElementById("contacts-tbody");
+    if (!tbody) return;
+    const q = (document.getElementById("contact-search") as HTMLInputElement)?.value?.toLowerCase() || "";
+    const statusFilter = (document.getElementById("contact-status-filter") as HTMLSelectElement)?.value || "";
+
+    let filtered = allContacts.filter((c) => {
+      if (q && !c.name?.toLowerCase().includes(q) && !c.email?.toLowerCase().includes(q)) return false;
+      if (statusFilter === "unread" && c.read) return false;
+      return true;
+    });
+
+    if (!filtered.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-sm text-muted-foreground/40">暂无留言</td></tr>';
+    } else {
+      tbody.innerHTML = filtered.map((c) => `
+        <tr class="border-b border-border/30 hover:bg-muted/20 transition-colors ${c.read ? "" : "bg-primary/5"}">
+          <td class="px-2 py-3"><input type="checkbox" class="row-checkbox contacts-checkbox rounded border-border/40 accent-primary" value="${c.id}" /></td>
+          <td class="px-4 py-3 font-medium">${esc(c.name || "")}</td>
+          <td class="px-4 py-3 text-xs text-muted-foreground/60 hidden sm:table-cell">${esc(c.email || "")}</td>
+          <td class="px-4 py-3 text-xs text-muted-foreground/70 hidden md:table-cell line-clamp-1 max-w-[200px]">${esc(c.message || "")}</td>
+          <td class="px-4 py-3 text-xs text-muted-foreground/40 hidden md:table-cell">${c.created_at ? new Date(c.created_at).toLocaleDateString("zh-CN") : "-"}</td>
+          <td class="px-4 py-3 text-right pr-2">
+            <button class="text-xs text-primary hover:text-primary/80 transition-colors contact-view mr-2" data-id="${c.id}">查看</button>
+            <button class="text-xs text-red-500 hover:text-red-600 transition-colors contact-del" data-id="${c.id}">删除</button>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    document.getElementById("contact-count")!.textContent = `共 ${total} 条留言`;
+
+    document.getElementById("contact-prev")!.toggleAttribute("disabled", contactPage <= 1);
+    document.getElementById("contact-next")!.toggleAttribute("disabled", contactPage * 15 >= total);
+
+    tbody.querySelectorAll(".contact-view").forEach((btn) => {
+      btn.addEventListener("click", () => viewContact((btn as HTMLElement).dataset.id!));
+    });
+    tbody.querySelectorAll(".contact-del").forEach((btn) => {
+      btn.addEventListener("click", () => deleteContact((btn as HTMLElement).dataset.id!));
+    });
+  }
+
+  let currentContactId: string | null = null;
+
+  function viewContact(id: string) {
+    const c = allContacts.find((x) => x.id === id);
+    if (!c) return;
+    currentContactId = id;
+    const overlay = document.getElementById("contact-view-overlay")!;
+    overlay.classList.remove("hidden");
+    overlay.classList.add("flex");
+    document.getElementById("cv-name")!.textContent = c.name || "";
+    document.getElementById("cv-email")!.textContent = c.email || "";
+    document.getElementById("cv-date")!.textContent = c.created_at ? new Date(c.created_at).toLocaleString("zh-CN") : "-";
+    document.getElementById("cv-message")!.textContent = c.message || "";
+  }
+
+  async function deleteContact(id: string) {
+    if (!confirm("确定删除此留言？")) return;
+    try {
+      await apiDelete(`/api/admin/contacts/${id}`);
+      await loadContacts();
+      document.getElementById("contact-view-overlay")?.classList.add("hidden");
+      document.getElementById("contact-view-overlay")?.classList.remove("flex");
+    } catch (e: any) { alert("删除失败: " + e.message); }
+  }
+
+  document.getElementById("contact-search")?.addEventListener("input", () => renderContacts(allContacts.length));
+  document.getElementById("contact-status-filter")?.addEventListener("change", () => renderContacts(allContacts.length));
+  document.getElementById("contact-prev")?.addEventListener("click", () => { if (contactPage > 1) { contactPage--; loadContacts(); } });
+  document.getElementById("contact-next")?.addEventListener("click", () => { contactPage++; loadContacts(); });
+
+  // ===== Comments Management =====
+  async function loadCommentsAdmin() {
+    try {
+      const result = await apiGet(`/api/admin/comments?page=${commentPage}&pageSize=15`);
+      allCommentsAdmin = result.data || [];
+      renderCommentsAdmin(result.total);
+    } catch { allCommentsAdmin = []; renderCommentsAdmin(0); }
+  }
+
+  function renderCommentsAdmin(total: number) {
+    const tbody = document.getElementById("comments-tbody");
+    if (!tbody) return;
+
+    if (!allCommentsAdmin.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-sm text-muted-foreground/40">暂无评论</td></tr>';
+    } else {
+      tbody.innerHTML = allCommentsAdmin.map((c) => `
+        <tr class="border-b border-border/30 hover:bg-muted/20 transition-colors">
+          <td class="px-2 py-3"><input type="checkbox" class="row-checkbox comments-checkbox rounded border-border/40 accent-primary" value="${c.id}" /></td>
+          <td class="px-4 py-3 font-medium text-xs">${esc(c.author || "匿名")}</td>
+          <td class="px-4 py-3 text-xs text-muted-foreground/70 hidden sm:table-cell line-clamp-1 max-w-[200px]">${esc(c.content || "")}</td>
+          <td class="px-4 py-3 text-xs text-muted-foreground/60 hidden md:table-cell truncate max-w-[150px]">${esc(c.post_slug || "")}</td>
+          <td class="px-4 py-3 text-xs text-muted-foreground/40 hidden md:table-cell">${c.created_at ? new Date(c.created_at).toLocaleDateString("zh-CN") : "-"}</td>
+          <td class="px-4 py-3 text-right pr-2">
+            <button class="text-xs text-red-500 hover:text-red-600 transition-colors comment-del" data-id="${c.id}">删除</button>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    document.getElementById("comment-count")!.textContent = `共 ${total} 条评论`;
+    document.getElementById("comment-prev")!.toggleAttribute("disabled", commentPage <= 1);
+    document.getElementById("comment-next")!.toggleAttribute("disabled", commentPage * 15 >= total);
+
+    tbody.querySelectorAll(".comment-del").forEach((btn) => {
+      btn.addEventListener("click", () => deleteCommentAdmin((btn as HTMLElement).dataset.id!));
+    });
+  }
+
+  async function deleteCommentAdmin(id: string) {
+    if (!confirm("确定删除此评论及其所有回复？")) return;
+    try {
+      await apiDelete(`/api/admin/comments/${id}`);
+      await loadCommentsAdmin();
+    } catch (e: any) { alert("删除失败: " + e.message); }
+  }
+
+  document.getElementById("comment-prev")?.addEventListener("click", () => { if (commentPage > 1) { commentPage--; loadCommentsAdmin(); } });
+  document.getElementById("comment-next")?.addEventListener("click", () => { commentPage++; loadCommentsAdmin(); });
+
+  // ===== Batch Operations =====
+  function setupBatchSelectAll(selectAllId: string, checkboxClass: string, batchBarId: string, countId: string) {
+    const selectAll = document.getElementById(selectAllId) as HTMLInputElement;
+    const batchBar = document.getElementById(batchBarId);
+    const countEl = document.getElementById(countId);
+    if (!selectAll || !batchBar || !countEl) return;
+
+    function updateBatchBar() {
+      const tbody = selectAll.closest("table")?.querySelector("tbody");
+      if (!tbody) return;
+      const checked = tbody.querySelectorAll<HTMLInputElement>(`.${checkboxClass}:checked`);
+      const total = tbody.querySelectorAll<HTMLInputElement>(`.${checkboxClass}`).length;
+      countEl.textContent = `已选 ${checked.length} 项`;
+      batchBar.classList.toggle("hidden", checked.length === 0);
+      if (selectAll) selectAll.checked = checked.length > 0 && checked.length === total;
+    }
+
+    selectAll.addEventListener("change", () => {
+      const tbody = selectAll.closest("table")?.querySelector("tbody");
+      if (!tbody) return;
+      tbody.querySelectorAll<HTMLInputElement>(`.${checkboxClass}`).forEach((cb) => { cb.checked = selectAll.checked; });
+      updateBatchBar();
+    });
+
+    document.addEventListener("change", (e) => {
+      const target = e.target as HTMLElement;
+      if (target.classList.contains(checkboxClass)) updateBatchBar();
+    });
+
+    const observer = new MutationObserver(() => {
+      const tbody = selectAll.closest("table")?.querySelector("tbody");
+      if (!tbody) return;
+      tbody.querySelectorAll<HTMLInputElement>(`.${checkboxClass}`).forEach((cb) => {
+        cb.removeEventListener("change", updateBatchBar);
+        cb.addEventListener("change", updateBatchBar);
+      });
+      updateBatchBar();
+    });
+    const table = selectAll.closest("table");
+    if (table) observer.observe(table, { childList: true, subtree: true });
+  }
+
+  setupBatchSelectAll("posts-select-all", "posts-checkbox", "posts-batch-bar", "posts-selected-count");
+  setupBatchSelectAll("projects-select-all", "projects-checkbox", "projects-batch-bar", "projects-selected-count");
+  setupBatchSelectAll("quotes-select-all", "quotes-checkbox", "quotes-batch-bar", "quotes-selected-count");
+  setupBatchSelectAll("contacts-select-all", "contacts-checkbox", "contacts-batch-bar", "contacts-selected-count");
+  setupBatchSelectAll("comments-select-all", "comments-checkbox", "comments-batch-bar", "comments-selected-count");
+
+  document.querySelectorAll(".batch-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const el = btn as HTMLElement;
+      const type = el.dataset.type!;
+      const action = el.dataset.action!;
+      const checkboxClass = `${type}-checkbox`;
+      const checkedBoxes = document.querySelectorAll<HTMLInputElement>(`.${checkboxClass}:checked`);
+      const ids = Array.from(checkedBoxes).map((cb) => cb.value);
+      if (ids.length === 0) return;
+
+      const actionLabel = action === "delete" ? "删除" : action === "publish" ? "发布" : action === "draft" ? "标记草稿" : action === "read" ? "标记已读" : action;
+      if (!confirm(`确定${actionLabel}选中的 ${ids.length} 项？`)) return;
+
+      el.textContent = "操作中...";
+      (el as HTMLButtonElement).disabled = true;
+      try {
+        await apiPost(`/api/admin/${type}/batch`, { action, ids });
+        // reload the relevant data
+        if (type === "posts") await loadPosts();
+        else if (type === "projects") await loadProjects();
+        else if (type === "quotes") await loadQuotes();
+        else if (type === "contacts") await loadContacts();
+        else if (type === "comments") await loadCommentsAdmin();
+      } catch (e: any) {
+        alert(`批量操作失败: ${e.message}`);
+      } finally {
+        el.textContent = actionLabel === "标记草稿" ? "标记草稿" : actionLabel === "标记已读" ? "标记已读" : `批量${actionLabel}`;
+        (el as HTMLButtonElement).disabled = false;
+      }
+    });
+  });
+
+  // ===== Data Export =====
+  document.querySelectorAll(".export-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const type = (btn as HTMLElement).dataset.type;
+      const token = sessionStorage.getItem(PASSWORD_KEY) || "";
+      window.open(`/api/admin/export/${type}?x-admin-password=${encodeURIComponent(token)}`, "_blank");
+    });
+  });
+
+  // ===== Tab load hooks =====
+  document.querySelector('[data-tab="contacts"]')?.addEventListener("click", () => { contactPage = 1; loadContacts(); }, true);
+  document.querySelector('[data-tab="comments"]')?.addEventListener("click", () => { commentPage = 1; loadCommentsAdmin(); }, true);
+
+  // ===== Contact View Modal =====
+  const cvOverlay = document.createElement("div");
+  cvOverlay.id = "contact-view-overlay";
+  cvOverlay.className = "fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4";
+  cvOverlay.innerHTML = `
+    <div class="bg-card border border-border/40 rounded-2xl w-full max-w-lg shadow-2xl">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-border/30">
+        <h2 class="text-lg font-bold">留言详情</h2>
+        <button id="cv-close" class="text-muted-foreground/60 hover:text-primary transition-colors">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="p-6 space-y-4">
+        <div class="flex items-center gap-4">
+          <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm" id="cv-avatar"></div>
+          <div>
+            <p class="font-medium text-sm" id="cv-name"></p>
+            <p class="text-xs text-muted-foreground/60" id="cv-email"></p>
+          </div>
+          <div class="ml-auto text-xs text-muted-foreground/40" id="cv-date"></div>
+        </div>
+        <div class="p-4 rounded-xl bg-muted/20 border border-border/20">
+          <p class="text-sm whitespace-pre-wrap" id="cv-message"></p>
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button id="cv-delete" class="px-4 py-2 rounded-xl bg-red-500/80 text-white text-xs font-medium hover:bg-red-500 transition-colors">删除留言</button>
+          <button id="cv-close-btn" class="px-4 py-2 rounded-xl border border-border/40 text-xs font-medium hover:bg-muted/30 transition-colors">关闭</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(cvOverlay);
+
+  document.getElementById("cv-close")?.addEventListener("click", () => { cvOverlay.classList.add("hidden"); cvOverlay.classList.remove("flex"); });
+  document.getElementById("cv-close-btn")?.addEventListener("click", () => { cvOverlay.classList.add("hidden"); cvOverlay.classList.remove("flex"); });
+  cvOverlay.addEventListener("click", (e) => { if (e.target === e.currentTarget) { cvOverlay.classList.add("hidden"); cvOverlay.classList.remove("flex"); } });
+  document.getElementById("cv-delete")?.addEventListener("click", () => {
+    if (currentContactId) deleteContact(currentContactId);
+  });
+
   // ===== Plugins (localStorage) =====
   document.querySelectorAll<HTMLInputElement>(".plugin-toggle input").forEach((toggle) => {
     const plugin = toggle.dataset.plugin || "";
@@ -943,7 +1399,7 @@ export const prerender = false;
       }
       if (plugin === "particles") document.querySelectorAll("canvas").forEach((c) => (c as HTMLElement).style.display = toggle.checked ? "" : "none");
       if (plugin === "scrollReveal") document.querySelectorAll("[data-animate]").forEach((el) => { (el as HTMLElement).style.animationPlayState = toggle.checked ? "running" : "paused"; });
-      if (plugin === "cosmicEnding") { const el = document.getElementById("cosmic-ending"); if (el) el.style.display = toggle.checked ? "" : "none"; }
+      if (plugin === "cosmicEnding") { const e = document.getElementById("cosmic-ending"); if (e) e.style.display = toggle.checked ? "" : "none"; }
       if (plugin === "magneticButtons") document.documentElement.classList.toggle("no-magnetic", !toggle.checked);
       if (plugin === "textScramble") document.documentElement.classList.toggle("no-scramble", !toggle.checked);
       if (plugin === "cardTilt") document.documentElement.classList.toggle("no-tilt", !toggle.checked);

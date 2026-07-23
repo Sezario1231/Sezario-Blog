@@ -7,6 +7,7 @@ import ParticleCanvas from "@/components/ParticleCanvas";
 import GlobalEffects from "@/components/GlobalEffects.astro";
 import EasterEggs from "@/components/EasterEggs.astro";
 import MusicPlayer from "@/components/MusicPlayer.astro";
+import CosmicEnding from "@/components/CosmicEnding";
 import { ViewTransitions } from "astro:transitions";
 
 export interface Props {
@@ -100,6 +101,7 @@ const ogImage = image ? (image.startsWith("http") ? image : `${siteUrl}${image}`
       <slot />
     </main>
     <Footer />
+    <CosmicEnding client:idle />
 
     <button
       id="back-to-top"

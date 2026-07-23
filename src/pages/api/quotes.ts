@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { getSupabase } from "@/lib/supabase";
-import { verifyAdmin, unauthorized, json, jsonError } from "@/lib/admin-auth";
+import { verifyAdminRequest, unauthorized, json, jsonError } from "@/lib/admin-auth";
 
 export const prerender = false;
 
@@ -16,7 +16,7 @@ export const GET: APIRoute = async () => {
 };
 
 export const POST: APIRoute = async ({ request }) => {
-  if (!verifyAdmin(request)) return unauthorized();
+  if (!verifyAdminRequest(request)) return unauthorized();
 
   let body: any;
   try {
@@ -43,7 +43,7 @@ export const POST: APIRoute = async ({ request }) => {
 };
 
 export const DELETE: APIRoute = async ({ request }) => {
-  if (!verifyAdmin(request)) return unauthorized();
+  if (!verifyAdminRequest(request)) return unauthorized();
 
   let body: any;
   try {

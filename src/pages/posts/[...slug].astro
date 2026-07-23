@@ -2,7 +2,7 @@
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { getPostBySlug, getPosts } from "@/lib/posts";
 import { marked } from "marked";
-import Giscus from "@/components/Giscus";
+import Comments from "@/components/Comments";
 import ShareButtons from "@/components/ShareButtons.astro";
 import RelatedPosts from "@/components/RelatedPosts.astro";
 import LikeButton from "@/components/LikeButton.astro";
@@ -125,14 +125,7 @@ while ((match = headingRegex.exec(post.body)) !== null) {
         <RelatedPosts currentSlug={slug} tags={post.tags} category={post.category} />
 
         <div data-animate>
-          <Giscus
-            client:visible
-            repo="Sezario1231/Sezario-Blog"
-            repoId="R_kgDOTcVRWg"
-            category="Announcements"
-            categoryId="DIC_kwDOTcVRWs4DBgso"
-            term={"/" + slug}
-          />
+          <Comments slug={slug} client:visible />
         </div>
       </div>
 
