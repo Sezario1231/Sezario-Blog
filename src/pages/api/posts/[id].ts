@@ -29,6 +29,16 @@ export const PUT: APIRoute = async ({ request, params }) => {
     return jsonError("请求体解析失败");
   }
 
+  let articleBody = body.body;
+  if (body.body_base64) {
+    try {
+      const bytes = Uint8Array.from(atob(body.body_base64), (c) => c.charCodeAt(0));
+      articleBody = new TextDecoder("utf-8").decode(bytes);
+    } catch {
+      return jsonError("body_base64 解码失败");
+    }
+  }
+
   const supabase = getSupabase();
   const { data, error } = await supabase
     .from("posts")
@@ -37,7 +47,7 @@ export const PUT: APIRoute = async ({ request, params }) => {
       description: body.description,
       category: body.category,
       tags: body.tags,
-      body: body.body,
+      body: articleBody,
       cover_image: body.cover_image || null,
       password: body.password || null,
       draft: body.draft ?? false,

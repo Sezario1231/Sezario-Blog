@@ -20,7 +20,20 @@ if (!post || post.draft) {
   return Astro.redirect("/404");
 }
 
-const renderedBody = marked.parse(post.body || "");
+function generateHeadingId(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^\w\u4e00-\u9fff]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+const renderer = new marked.Renderer();
+renderer.heading = function ({ text, depth }: { text: string; depth: number }) {
+  const id = generateHeadingId(text.replace(/<[^>]+>/g, ""));
+  return `<h${depth} id="${id}">${text}</h${depth}>`;
+};
+
+const renderedBody = marked.parse(post.body || "", { renderer });
 
 const allPosts = await getPosts();
 const publishedPosts = allPosts;
@@ -38,11 +51,7 @@ let match;
 while ((match = headingRegex.exec(post.body)) !== null) {
   const depth = match[1].length;
   const text = match[2].trim();
-  const headingSlug = text
-    .toLowerCase()
-    .replace(/[^\w\u4e00-\u9fff]+/g, "-")
-    .replace(/^-|-$/g, "");
-  tocHeadings.push({ depth, slug: headingSlug, text });
+  tocHeadings.push({ depth, slug: generateHeadingId(text), text });
 }
 ---
 
@@ -93,7 +102,7 @@ while ((match = headingRegex.exec(post.body)) !== null) {
           </div>
         </header>
 
-        <div class="prose prose-lg dark:prose-invert max-w-none" data-animate set:html={renderedBody}></div>
+        <div class="prose prose-lg dark:prose-invert max-w-none" set:html={renderedBody}></div>
 
         <div class="border-t border-border/50 mt-16 pt-8" data-animate>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
