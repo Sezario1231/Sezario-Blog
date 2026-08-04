@@ -17,6 +17,42 @@ async function uploadImage(file: File): Promise<string> {
   return body.url;
 }
 
+async function compressImage(file: File): Promise<File> {
+  if (file.type === "image/gif" || !file.type.startsWith("image/")) return file;
+  if (file.size <= 300 * 1024) return file;
+  try {
+    const bitmap = await createImageBitmap(file);
+    const MAX_SIDE = 1600;
+    const scale = Math.min(1, MAX_SIDE / Math.max(bitmap.width, bitmap.height));
+    if (scale >= 1 && file.size <= 2 * 1024 * 1024) {
+      bitmap.close();
+      return file;
+    }
+    const w = Math.round(bitmap.width * scale);
+    const h = Math.round(bitmap.height * scale);
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      bitmap.close();
+      return file;
+    }
+    ctx.drawImage(bitmap, 0, 0, w, h);
+    bitmap.close();
+    const isPng = file.type === "image/png";
+    const mime = isPng ? "image/png" : "image/webp";
+    const blob: Blob | null = await new Promise((resolve) =>
+      canvas.toBlob(resolve, mime, isPng ? undefined : 0.82)
+    );
+    if (!blob || blob.size >= file.size) return file;
+    const ext = isPng ? ".png" : ".webp";
+    return new File([blob], file.name.replace(/\.\w+$/, ext), { type: mime });
+  } catch {
+    return file;
+  }
+}
+
 /* ── Props ── */
 interface MarkdownEditorProps {
   onChange?: (value: string) => void;
@@ -101,8 +137,9 @@ export default function MarkdownEditor({ onChange }: MarkdownEditorProps) {
 
   /* ── Upload logic ── */
   const doUpload = useCallback(
-    (file: File) => {
-      if (file.size > MAX_IMAGE_SIZE) {
+    async (file: File) => {
+      const compressed = await compressImage(file);
+      if (compressed.size > MAX_IMAGE_SIZE) {
         alert(`图片超过 10MB 无法上传: ${file.name}`);
         return;
       }
@@ -114,7 +151,7 @@ export default function MarkdownEditor({ onChange }: MarkdownEditorProps) {
       const sep = cur.endsWith("\n") ? "" : "\n";
       handleChange(cur + sep + placeholder + "\n");
 
-      uploadImage(file)
+      uploadImage(compressed)
         .then((url) => {
           const cur = getValue();
           if (cur.includes(token)) {
@@ -283,7 +320,6 @@ export default function MarkdownEditor({ onChange }: MarkdownEditorProps) {
             commands.divider,
             commands.table,
             commands.quote,
-            commands.horizontalRule,
           ]}
           extraCommands={[
             commands.codeEdit,

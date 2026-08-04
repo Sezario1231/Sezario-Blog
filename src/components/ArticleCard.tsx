@@ -24,7 +24,7 @@ export default function ArticleCard({
   style,
   ...rest
 }: ArticleCardProps) {
-  const cardRef = React.useRef<HTMLAnchorElement>(null);
+  const cardRef = React.useRef<HTMLDivElement>(null);
   const glareRef = React.useRef<HTMLDivElement>(null);
 
   const handleMouseMove = (e: React.MouseEvent) => {

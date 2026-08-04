@@ -133,7 +133,7 @@ const baseUrl = filterParams.toString() ? `/posts?${filterParams.toString()}` : 
 
         if (newCards.length === 0) {
           hasMore = false;
-          sentinel.innerHTML = '<p class="text-sm text-muted-foreground/40">— 没有更多了 —</p>';
+          sentinel!.innerHTML = '<p class="text-sm text-muted-foreground/40">— 没有更多了 —</p>';
           observer.disconnect();
           return;
         }
@@ -148,13 +148,13 @@ const baseUrl = filterParams.toString() ? `/posts?${filterParams.toString()}` : 
           const total = parseInt(totalPages.getAttribute("data-total-pages") || "0");
           if (nextPage >= total) {
             hasMore = false;
-            sentinel.innerHTML = '<p class="text-sm text-muted-foreground/40">— 没有更多了 —</p>';
+            sentinel!.innerHTML = '<p class="text-sm text-muted-foreground/40">— 没有更多了 —</p>';
             observer.disconnect();
           }
         }
       } catch {
         hasMore = false;
-        sentinel.innerHTML = '<p class="text-sm text-muted-foreground/40">加载失败，请刷新重试</p>';
+        sentinel!.innerHTML = '<p class="text-sm text-muted-foreground/40">加载失败，请刷新重试</p>';
       }
 
       loading = false;

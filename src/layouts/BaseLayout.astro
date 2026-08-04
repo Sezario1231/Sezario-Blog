@@ -168,7 +168,7 @@ const ogImage = image ? (image.startsWith("http") ? image : `${siteUrl}${image}`
       const scrollTop = window.scrollY;
       const docHeight = document.documentElement.scrollHeight - window.innerHeight;
       const progress = docHeight > 0 ? scrollTop / docHeight : 0;
-      bar.style.transform = `scaleX(${progress})`;
+      bar!.style.transform = `scaleX(${progress})`;
     }
     window.addEventListener("scroll", update, { passive: true });
     update();
@@ -181,6 +181,32 @@ const ogImage = image ? (image.startsWith("http") ? image : `${siteUrl}${image}`
     initScrollProgress();
   }
 
+  // ====== 前端错误上报 ======
+  function initErrorReport() {
+    try {
+      let sent = 0;
+      const report = (message: string, stack?: string) => {
+        if (sent >= 5) return;
+        sent++;
+        navigator.sendBeacon(
+          "/api/report-error",
+          new Blob(
+            [JSON.stringify({ page: location.pathname, message, stack: stack || "" })],
+            { type: "application/json" }
+          )
+        );
+      };
+      window.addEventListener("error", (e) => report(e.message || "Unknown error", e.error?.stack));
+      window.addEventListener("unhandledrejection", (e) => {
+        const err = e.reason;
+        report(err?.message || "Unhandled rejection", err?.stack);
+      });
+    } catch {
+      /* 上报失败静默忽略 */
+    }
+  }
+
   document.addEventListener("DOMContentLoaded", onNavigation);
   document.addEventListener("astro:page-load", onNavigation);
+  initErrorReport();
 </script>

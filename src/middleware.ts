@@ -1,14 +1,11 @@
 import { defineMiddleware } from "astro/middleware";
 
-const siteUrl = import.meta.env.PUBLIC_SITE_URL?.replace(/\/$/, "") || "http://localhost:4321";
-
 const csp = [
   "default-src 'self'",
-  "script-src 'self' https://giscus.app https://cdn.jsdelivr.net 'unsafe-inline' 'unsafe-eval'",
+  "script-src 'self' https://cdn.jsdelivr.net 'unsafe-inline' 'unsafe-eval'",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "connect-src 'self' https://*.supabase.co https://api.github.com",
-  "frame-src https://giscus.app",
   "font-src 'self' data:",
   "base-uri 'self'",
   "form-action 'self'",
@@ -16,7 +13,7 @@ const csp = [
   "frame-ancestors 'none'",
 ].join("; ");
 
-export const onRequest = defineMiddleware(async (context, next) => {
+export const onRequest = defineMiddleware(async (_context, next) => {
   const response = await next();
 
   if (!response.headers.has("X-Frame-Options")) {

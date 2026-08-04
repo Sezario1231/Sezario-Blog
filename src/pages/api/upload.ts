@@ -1,11 +1,12 @@
 import type { APIRoute } from "astro";
+import { Buffer } from "node:buffer";
 import { getSupabase } from "@/lib/supabase";
 import { verifyAdminRequest, unauthorized } from "@/lib/admin-auth";
 
 export const prerender = false;
 
 const ALLOWED_TYPES = new Set([
-  "image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml",
+  "image/jpeg", "image/png", "image/webp", "image/gif",
 ]);
 const MAX_SIZE = 10 * 1024 * 1024;
 
@@ -31,7 +32,7 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   if (!ALLOWED_TYPES.has(file.type)) {
-    return new Response(JSON.stringify({ error: "不支持的文件类型，仅允许 JPG/PNG/WebP/GIF/SVG" }), {
+    return new Response(JSON.stringify({ error: "不支持的文件类型，仅允许 JPG/PNG/WebP/GIF" }), {
       status: 400,
       headers: { "Content-Type": "application/json" },
     });

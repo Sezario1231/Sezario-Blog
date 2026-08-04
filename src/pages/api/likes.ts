@@ -1,5 +1,6 @@
 import type { APIRoute } from "astro";
 import { getSupabase } from "@/lib/supabase";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export const prerender = false;
 
@@ -12,8 +13,6 @@ interface LikeBody {
   slug?: unknown;
   session_id?: unknown;
 }
-
-const ipHits = new Map<string, { count: number; resetAt: number }>();
 
 function getClientIp(request: Request, clientAddress: string): string {
   const forwarded = request.headers.get("x-forwarded-for");
@@ -32,17 +31,6 @@ function validSlug(slug: string): boolean {
 
 function validSession(sessionId: string): boolean {
   return sessionId.length > 0 && sessionId.length <= SESSION_MAX && !/\s/.test(sessionId);
-}
-
-function rateLimited(ip: string): boolean {
-  const now = Date.now();
-  const entry = ipHits.get(ip);
-  if (!entry || now >= entry.resetAt) {
-    ipHits.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
-    return false;
-  }
-  entry.count++;
-  return entry.count > RATE_LIMIT_COUNT;
 }
 
 function json(data: unknown, status = 200): Response {
@@ -85,7 +73,7 @@ export const GET: APIRoute = async ({ url }) => {
   }
 };
 
-export const POST: APIRoute = async ({ request, clientAddress }) => {
+export const POST: APIRoute = async ({ request, clientAddress, locals }) => {
   if (request.headers.get("content-type")?.includes("application/json") === false) {
     return jsonError("请求格式不正确", 400);
   }
@@ -102,7 +90,7 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
   if (!validSlug(slug)) return jsonError("缺少或无效的 slug 参数", 400);
   if (!validSession(sessionId)) return jsonError("缺少或无效的 session_id 参数", 400);
 
-  if (rateLimited(getClientIp(request, clientAddress))) {
+  if (await checkRateLimit(locals, "likes", getClientIp(request, clientAddress), RATE_LIMIT_COUNT, RATE_LIMIT_WINDOW_MS)) {
     return jsonError("操作过于频繁，请稍后再试", 429);
   }
 
@@ -132,7 +120,7 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
   }
 };
 
-export const DELETE: APIRoute = async ({ request, clientAddress }) => {
+export const DELETE: APIRoute = async ({ request, clientAddress, locals }) => {
   if (request.headers.get("content-type")?.includes("application/json") === false) {
     return jsonError("请求格式不正确", 400);
   }
@@ -149,7 +137,7 @@ export const DELETE: APIRoute = async ({ request, clientAddress }) => {
   if (!validSlug(slug)) return jsonError("缺少或无效的 slug 参数", 400);
   if (!validSession(sessionId)) return jsonError("缺少或无效的 session_id 参数", 400);
 
-  if (rateLimited(getClientIp(request, clientAddress))) {
+  if (await checkRateLimit(locals, "likes", getClientIp(request, clientAddress), RATE_LIMIT_COUNT, RATE_LIMIT_WINDOW_MS)) {
     return jsonError("操作过于频繁，请稍后再试", 429);
   }
 

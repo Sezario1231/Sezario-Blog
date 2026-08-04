@@ -163,16 +163,17 @@ D:\code\my-blog\
 | `/api/quotes` | POST | 否 | 密码 + Origin | 添加名言 |
 | `/api/quotes` | DELETE | 否 | 密码 + Origin | 删除名言 |
 | `/api/comments` | GET | 是 | 无 | 获取评论 |
-| `/api/comments` | POST | 是 | 限流 (IP, 10min/3次) | 提交评论 |
+| `/api/comments` | POST | 是 | 限流 (IP, 10min/3次, DB计数) | 提交评论 |
 | `/api/contact` | POST | 是 | 限流 + XSS 转义 | 联系表单提交 |
 | `/api/online` | POST | 是 | 无 | 在线状态心跳（30s 一次，90s 过期清理） |
 | `/api/likes` | GET | 是 | 无 | 获取点赞数 + 当前访客是否已赞 |
-| `/api/likes` | POST | 是 | 限流 (IP, 10min/30次) | 点赞（复合主键防重复） |
-| `/api/likes` | DELETE | 是 | 限流 (IP, 10min/30次) | 取消点赞 |
+| `/api/likes` | POST | 是 | 限流 (IP, 10min/30次, KV) | 点赞（复合主键防重复） |
+| `/api/likes` | DELETE | 是 | 限流 (IP, 10min/30次, KV) | 取消点赞 |
 | `/api/settings` | GET | 是 | 无 | 获取站点设置 |
 | `/api/settings` | PUT | 否 | 密码 + Origin | 更新站点设置 |
-| `/api/admin-verify` | POST | 是 | 限流 (IP, 15min/5次) | 管理员密码验证 |
-| `/api/upload` | POST | 否 | 密码 + Origin + MIME 白名单 | 图片上传到 Supabase Storage |
+| `/api/admin-verify` | POST | 是 | 限流 (IP, 15min/5次, KV) | 管理员密码验证 |
+| `/api/upload` | POST | 否 | 密码 + Origin + MIME 白名单 | 图片上传到 Supabase Storage（前端压缩，10MB 上限） |
+| `/api/report-error` | POST | 是 | 限流 (IP, 10min/10次, KV) | 前端错误上报（写 frontend_errors 表） |
 | `/api/search.json` | GET | 是 | 无 | 前端搜索数据源 |
 | `/api/admin/posts/batch` | POST | 否 | 密码 + Origin | 批量删除/发布/草稿 |
 | `/api/admin/projects/batch` | POST | 否 | 密码 + Origin | 批量删除 |
@@ -187,7 +188,7 @@ D:\code\my-blog\
 **认证方式**：
 - **密码**：请求头 `x-admin-password` 与 `.env` 中 `ADMIN_PASSWORD` 比对
 - **Origin**：CSRF 防护，校验 `Origin`/`Referer` 必须为本站域名
-- **限流**：基于 IP 内存计数
+- **限流**：`src/lib/rate-limit.ts` 统一实现——优先 Cloudflare KV（`RATE_LIMIT_KV` namespace，已绑定 production/preview），KV 不可用时降级内存 Map
 
 ---
 
@@ -201,8 +202,8 @@ D:\code\my-blog\
 | **XSS 防护** | `src/lib/sanitize.ts` `escapeHtml()` | 评论、联系表单所有用户输入入库前转义 |
 | **CSRF 防护** | `src/lib/admin-auth.ts` `verifyOrigin()` | 管理 API 校验 Origin/Referer 必须为本站域名 |
 | **IP 脱敏** | `maskIp()` | IPv4 末段掩码为 x，IPv6 尾部截断 |
-| **速率限制** | 评论/联系 10 分钟 3 次，管理员登录 15 分钟 5 次 | IP 级别内存计数 |
-| **文件上传校验** | `/api/upload` | 白名单 MIME 类型 + 5MB 大小限制 |
+| **速率限制** | `src/lib/rate-limit.ts`：评论/联系 10 分钟 3 次（DB 计数），点赞 10 分钟 30 次（KV），管理员验证 15 分钟 5 次（KV），错误上报 10 分钟 10 次（KV） | KV 持久化 + 内存降级 |
+| **文件上传校验** | `/api/upload` | 白名单 MIME 类型（jpeg/png/webp/gif，无 SVG）+ 10MB 大小限制 |
 | **管理员暴力破解防护** | `/api/admin-verify` | 内存 Map 15 分钟 5 次尝试限制 |
 | **RLS 策略** | Supabase 表默认拒绝公共访问 | 服务端通过 service_role 绕过 |
 | **服务端密钥** | 仅存于 `.env` + `wrangler.toml` | 不暴露给客户端 |
@@ -302,14 +303,22 @@ base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none';
 
 ## 9. 部署
 
-### 9.1 重要：Cloudflare Pages 无 Git 集成
+### 9.1 部署方式（手动 + 自动）
 
-该项目使用 **Direct Upload** 模式部署到 Cloudflare Pages，git push 不会触发自动构建。每次修改后需要手动部署：
+该项目使用 **Direct Upload** 模式部署到 Cloudflare Pages。手动部署：
 
 ```powershell
 npm run build
 npx wrangler pages deploy dist --project-name sezario-blog --branch main
 ```
+
+**GitHub Actions 自动部署**（推荐）：推送 `master` 分支后，`.github/workflows/deploy.yml` 自动构建并部署（含 `npm run check` 类型检查）。首次启用需在 GitHub 仓库 Secrets 配置：
+
+- `CLOUDFLARE_API_TOKEN`：Cloudflare API Token（需 Pages:Edit + Workers:Edit 权限）
+- `CLOUDFLARE_ACCOUNT_ID`：Cloudflare 账号 ID
+- `PUBLIC_SITE_URL` / `PUBLIC_SUPABASE_URL` / `PUBLIC_SUPABASE_ANON_KEY` / `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` / `ADMIN_PASSWORD`：构建所需环境变量
+
+**限流 KV 绑定**：`RATE_LIMIT_KV` namespace（id `7122c0c0ee4d4d1ba42c44d029baddc3`）已绑定到项目 production + preview 环境。若重建 namespace，需在 Dashboard → Pages → sezario-blog → Settings → Bindings 重新绑定。
 
 ### 9.2 开发服务器
 
@@ -317,14 +326,14 @@ npx wrangler pages deploy dist --project-name sezario-blog --branch main
 npm run dev
 ```
 
-默认在 `http://localhost:4321` 启动。
+默认在 `http://localhost:4321` 启动。类型检查：`npm run check`。
 
 ### 9.3 分支策略
 
 | 分支 | 用途 | 适配器 |
 |------|------|--------|
-| `master` | 开发主分支 | Cloudflare |
-| `main` | 部署分支（已同步） | Cloudflare（之前曾遗留 Vercel 配置） |
+| `master` | 开发主分支（GitHub Actions 部署触发分支） | Cloudflare |
+| `main` | 部署分支（已同步） | Cloudflare |
 
 **注意**：两个分支的 `astro.config.mjs` 必须保持一致。修改后请同步：
 
@@ -364,17 +373,17 @@ git checkout master
 
 ### 11.2 常见陷阱
 - **Cloudflare 不支持 `sharp` 运行时**：构建时已有警告，若图片处理出错需配置 `imageService: "compile"`
-- **`@astrojs/vercel` 与 `@astrojs/cloudflare` 共存**：两者都在 package.json 中，切换适配器时记得改 `astro.config.mjs`
 - **`.env` 中的 ADMIN_PASSWORD 不能更改**（除非同步更新 Supabase 中的验证逻辑）
 - **搜索数据源**：`/api/search.json` 返回所有已发布文章，前端做客户端过滤
 - **favicon.ico 不存在**：只有 `favicon.svg`，浏览器默认请求 `favicon.ico` 会返回 404（正常）
+- **KV 绑定依赖 `locals.runtime.env`**：`src/lib/rate-limit.ts` 读取 `RATE_LIMIT_KV`；本地 dev 无 KV 时自动降级内存 Map（限流仍生效，但不跨实例）
+- **`frontend_errors` 表需手动建**：新增于 2026-08-04，SQL 见文末更新记录；未建表时 `/api/report-error` 返回 500（前端静默忽略，不影响使用）
 
 ### 11.3 未来可能的改进方向
-- 将 Cloudflare Pages 接入 Git 仓库，实现 push 自动部署
 - 添加 `public/_headers` 文件，让静态文件（favicon.svg 等）也带上安全头
 - 添加 `public/_redirects` 文件处理 404 回退
 - 优化图片加载（Cloudflare Image Resizing 或 Astro 的 `<Image />` 组件）
-- 用 Cloudflare KV 替代内存 Map 实现持久化速率限制（目前 Worker 冷启动会重置）
+- GitHub Actions 失败时自动发通知（Telegram/Discord webhook）
 
 ---
 
@@ -403,6 +412,7 @@ npx wrangler pages deployment list --project-name sezario-blog
 
 | 日期 | 内容 |
 |------|------|
+| 2026-08-04 | 综合优化：KV 限流持久化（RATE_LIMIT_KV + rate-limit.ts）、MarkdownEditor 代码分割（LazyMarkdownEditor）、前端图片压缩（canvas 1600px）、CSP 收紧去 giscus、上传白名单去 SVG、缓存头（sitemap/rss/search）、astro check 脚本（0 errors）、GitHub Actions 自动部署、移除 @astrojs/vercel、前端错误上报（frontend_errors 表） |
 | 2026-08-03 | 点赞改为 Supabase 持久化（post_likes 表 + /api/likes，防重复 + 取消） |
 | 2026-08-03 | 在线人数改为心跳模型：删 DELETE、sessionStorage 每标签页独立、90s 过期清理 |
 | 2025-07-20 | 评论系统从 Giscus 切换到 Supabase（支持嵌套回复 + IP 限流 + 管理面板 CRUD） |
@@ -410,3 +420,20 @@ npx wrangler pages deployment list --project-name sezario-blog
 | 2025-07-20 | 星空彩蛋：页面底部滚动触发，300 星 + 星云 + 流星，localStorage 记忆关闭状态 |
 | 2025-07-20 | 修复 admin-auth.ts verifyOrigin/verifyAdminRequest（url→request 参数修复） |
 | 2025-07-20 | 修复 stats.ts Promise.allSettled 500 错误 |
+
+---
+
+## 14. 待执行 SQL（2026-08-04 前端错误上报）
+
+在 Supabase SQL Editor 执行一次：
+
+```sql
+create table if not exists public.frontend_errors (
+  id bigint generated by default as identity primary key,
+  page text,
+  message text not null,
+  stack text,
+  created_at timestamptz not null default now()
+);
+alter table public.frontend_errors enable row level security;
+```

@@ -1,9 +1,8 @@
 import type { APIRoute } from "astro";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const RATE_LIMIT_COUNT = 5;
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
-
-const attemptMap = new Map<string, number[]>();
 
 function getClientIp(request: Request, clientAddress: string): string {
   const forwarded = request.headers.get("x-forwarded-for");
@@ -16,26 +15,11 @@ function getClientIp(request: Request, clientAddress: string): string {
   return clientAddress || "unknown";
 }
 
-function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const windowStart = now - RATE_LIMIT_WINDOW_MS;
-  const attempts = attemptMap.get(ip)?.filter((t) => t > windowStart) || [];
-  attemptMap.set(ip, attempts);
-  return attempts.length >= RATE_LIMIT_COUNT;
-}
-
-function recordAttempt(ip: string): void {
-  const now = Date.now();
-  const windowStart = now - RATE_LIMIT_WINDOW_MS;
-  const attempts = attemptMap.get(ip)?.filter((t) => t > windowStart) || [];
-  attempts.push(now);
-  attemptMap.set(ip, attempts);
-}
-
-export const POST: APIRoute = async ({ request, clientAddress }) => {
+export const POST: APIRoute = async ({ request, clientAddress, locals }) => {
   const ip = getClientIp(request, clientAddress);
 
-  if (isRateLimited(ip)) {
+  const limited = await checkRateLimit(locals, "admin-verify", ip, RATE_LIMIT_COUNT, RATE_LIMIT_WINDOW_MS);
+  if (limited) {
     return new Response(JSON.stringify({ ok: false, error: "尝试过于频繁，请 15 分钟后再试" }), { status: 429 });
   }
 
@@ -45,8 +29,6 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
   } catch {
     return new Response(JSON.stringify({ ok: false }), { status: 400 });
   }
-
-  recordAttempt(ip);
 
   const { password } = body;
 

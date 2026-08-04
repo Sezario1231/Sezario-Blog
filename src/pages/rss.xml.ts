@@ -41,6 +41,7 @@ export const GET: APIRoute = async ({ site }) => {
   return new Response(rss, {
     headers: {
       "Content-Type": "application/rss+xml; charset=utf-8",
+      "Cache-Control": "public, max-age=3600",
     },
   });
 };
