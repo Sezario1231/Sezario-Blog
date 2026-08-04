@@ -7,7 +7,10 @@ let client: SupabaseClient | null = null;
 
 export function getSupabase(): SupabaseClient {
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-    throw new Error("SUPABASE_URL 或 SUPABASE_SERVICE_ROLE_KEY 环境变量未配置");
+    throw new Error(
+      "SUPABASE_URL 或 SUPABASE_SERVICE_ROLE_KEY 环境变量未配置: [" +
+        String(SUPABASE_URL) + "] [" + String(SUPABASE_SERVICE_ROLE_KEY) + "]"
+    );
   }
 
   if (!client) {
