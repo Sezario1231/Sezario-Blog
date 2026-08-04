@@ -819,6 +819,9 @@ export const prerender = false;
   }
 
   let editorDirty = false;
+  let uploadPending = 0;
+  window.addEventListener("upload:start", () => { uploadPending++; });
+  window.addEventListener("upload:end", () => { uploadPending = Math.max(0, uploadPending - 1); });
 
   function closePostEditor(force?: boolean) {
     if (!force && editorDirty && !confirm("有未保存的修改，确定离开？")) return;
@@ -860,6 +863,10 @@ export const prerender = false;
 
   document.getElementById("post-editor-form")?.addEventListener("submit", async (e) => {
     e.preventDefault();
+    if (uploadPending > 0) {
+      alert(`还有 ${uploadPending} 张图片正在上传，请稍候再保存`);
+      return;
+    }
     const id = (document.getElementById("pe-id") as HTMLInputElement).value;
     const tagsStr = (document.getElementById("pe-tags") as HTMLInputElement).value;
     const payload = {

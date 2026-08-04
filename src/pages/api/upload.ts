@@ -7,7 +7,7 @@ export const prerender = false;
 const ALLOWED_TYPES = new Set([
   "image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml",
 ]);
-const MAX_SIZE = 5 * 1024 * 1024;
+const MAX_SIZE = 10 * 1024 * 1024;
 
 export const POST: APIRoute = async ({ request }) => {
   if (!verifyAdminRequest(request)) return unauthorized();
@@ -38,7 +38,7 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   if (file.size > MAX_SIZE) {
-    return new Response(JSON.stringify({ error: "文件大小不能超过 5MB" }), {
+    return new Response(JSON.stringify({ error: "文件大小不能超过 10MB" }), {
       status: 400,
       headers: { "Content-Type": "application/json" },
     });

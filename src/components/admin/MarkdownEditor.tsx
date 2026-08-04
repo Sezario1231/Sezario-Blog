@@ -22,17 +22,25 @@ interface MarkdownEditorProps {
   onChange?: (value: string) => void;
 }
 
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
+
 /* ── Component ── */
 export default function MarkdownEditor({ onChange }: MarkdownEditorProps) {
   const [value, setValue] = useState("");
   const [theme, setTheme] = useState<"light" | "dark">("light");
-  const [uploading, setUploading] = useState(false);
   const [uploadCount, setUploadCount] = useState(0);
   const [dragging, setDragging] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saved" | "error">("idle");
   const editorRef = useRef<HTMLDivElement>(null);
   const valueRef = useRef(value);
   valueRef.current = value;
+
+  const uploading = uploadCount > 0;
+
+  function getValue(): string {
+    const ta = document.getElementById("pe-body") as HTMLTextAreaElement | null;
+    return ta ? ta.value : valueRef.current;
+  }
 
   /* ── Sync from hidden textarea on mount / edit ── */
   useEffect(() => {
@@ -94,28 +102,34 @@ export default function MarkdownEditor({ onChange }: MarkdownEditorProps) {
   /* ── Upload logic ── */
   const doUpload = useCallback(
     (file: File) => {
-      setUploading(true);
+      if (file.size > MAX_IMAGE_SIZE) {
+        alert(`图片超过 10MB 无法上传: ${file.name}`);
+        return;
+      }
+      const token = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+      const placeholder = `![上传中 ${file.name}](uploading:${token})`;
       setUploadCount((c) => c + 1);
-      const placeholder = `![上传中...](uploading)`;
-      const cur = valueRef.current;
+      window.dispatchEvent(new CustomEvent("upload:start"));
+      const cur = getValue();
       const sep = cur.endsWith("\n") ? "" : "\n";
       handleChange(cur + sep + placeholder + "\n");
 
       uploadImage(file)
         .then((url) => {
-          handleChange(valueRef.current.replace(placeholder, `![${file.name}](${url})`));
+          const cur = getValue();
+          if (cur.includes(token)) {
+            handleChange(cur.replace(placeholder, `![${file.name}](${url})`));
+          }
         })
         .catch((err: any) => {
-          handleChange(
-            valueRef.current.replace(placeholder, `> 图片上传失败: ${err?.message || file.name}`)
-          );
+          const cur = getValue();
+          if (cur.includes(token)) {
+            handleChange(cur.replace(placeholder, `> 图片上传失败: ${err?.message || file.name}`));
+          }
         })
         .finally(() => {
-          setUploadCount((c) => {
-            const next = c - 1;
-            if (next <= 0) setUploading(false);
-            return Math.max(0, next);
-          });
+          setUploadCount((c) => Math.max(0, c - 1));
+          window.dispatchEvent(new CustomEvent("upload:end"));
         });
     },
     [handleChange]
