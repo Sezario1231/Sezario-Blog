@@ -1,4 +1,4 @@
-# Sezario Blog
+# Sezario.
 
 个人技术博客：AI · 全栈开发 · 技术探索 · 学习记录
 
