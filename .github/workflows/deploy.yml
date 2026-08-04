@@ -36,6 +36,13 @@ jobs:
       - name: Type check
         run: npm run check
 
+      - name: Debug job env (debug)
+        run: |
+          echo "SUPABASE_URL len=${#SUPABASE_URL}" > dist-env-debug.txt 2>&1 || mkdir -p . && echo "SUPABASE_URL len=${#SUPABASE_URL}" > dist-env-debug.txt
+          echo "SERVICE len=${#SUPABASE_SERVICE_ROLE_KEY}" >> dist-env-debug.txt
+          echo "ADMIN len=${#ADMIN_PASSWORD}" >> dist-env-debug.txt
+          cat dist-env-debug.txt
+
       - name: Create .env file
         run: |
           echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> .env
