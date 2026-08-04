@@ -43,6 +43,11 @@ export default defineConfig({
     session: false,
   }),
   vite: {
+    define: {
+      "import.meta.env.SUPABASE_URL": JSON.stringify(env.SUPABASE_URL || ""),
+      "import.meta.env.SUPABASE_SERVICE_ROLE_KEY": JSON.stringify(env.SUPABASE_SERVICE_ROLE_KEY || ""),
+      "import.meta.env.ADMIN_PASSWORD": JSON.stringify(env.ADMIN_PASSWORD || ""),
+    },
     resolve: {
       alias: {
         "@": "/src",
