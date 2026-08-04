@@ -65,6 +65,9 @@ jobs:
       - name: Verify .env (debug)
         run: node -e 'const fs=require("fs");const e=fs.readFileSync(".env","utf8").trim().split("\n");const out=e.map(l=>{const i=l.indexOf("=");return i>0?l.slice(0,i)+" len="+(l.length-i-1):"<"+l+">"}).join("\n");fs.writeFileSync("dist/env-check.txt",out)'
 
+      - name: Copy build env debug
+        run: cp dist-build-env.json dist/
+
       - name: Deploy to Cloudflare Pages
         run: npx wrangler pages deploy dist --project-name sezario-blog --branch main
         env:

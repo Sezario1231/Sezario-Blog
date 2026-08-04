@@ -12,3 +12,6 @@ dev-out.txt
 dev.log
 dev-output.log
 .reasonix/
+.wrangler/
+dist-build-env.json
+

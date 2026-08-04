@@ -13,7 +13,7 @@ const csp = [
   "frame-ancestors 'none'",
 ].join("; ");
 
-export const onRequest = defineMiddleware(async (_context, next) => {
+export const onRequest = defineMiddleware(async (context, next) => {
   let response;
   try {
     response = await next();
