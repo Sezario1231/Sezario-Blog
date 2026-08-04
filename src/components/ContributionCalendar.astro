@@ -1,17 +1,15 @@
 ---
-import { getCollection } from "astro:content";
+import { getPosts } from "@/lib/posts";
 
-const allPosts = await getCollection("posts");
-const published = allPosts.filter((p) => !p.data.draft);
+const allPosts = await getPosts();
+const published = allPosts;
 
-// 统计每月发文数
 const monthCounts: Record<string, number> = {};
 published.forEach((p) => {
-  const key = `${p.data.date.getFullYear()}-${String(p.data.date.getMonth() + 1).padStart(2, "0")}`;
+  const key = `${p.date.getFullYear()}-${String(p.date.getMonth() + 1).padStart(2, "0")}`;
   monthCounts[key] = (monthCounts[key] || 0) + 1;
 });
 
-// 生成最近12个月
 const months: { key: string; label: string; count: number }[] = [];
 const now = new Date();
 for (let i = 11; i >= 0; i--) {

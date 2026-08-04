@@ -7,6 +7,7 @@ import ParticleCanvas from "@/components/ParticleCanvas";
 import GlobalEffects from "@/components/GlobalEffects.astro";
 import EasterEggs from "@/components/EasterEggs.astro";
 import MusicPlayer from "@/components/MusicPlayer.astro";
+import CosmicEnding from "@/components/CosmicEnding";
 import { ViewTransitions } from "astro:transitions";
 
 export interface Props {
@@ -36,7 +37,7 @@ const ogImage = image ? (image.startsWith("http") ? image : `${siteUrl}${image}`
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description ?? title} />
     <meta property="og:url" content={pageUrl} />
-    <meta property="og:site_name" content="Sezario." />
+    <meta property="og:site_name" content="Sezario的个人小屋" />
     <meta property="og:image" content={ogImage} />
     <meta property="og:locale" content="zh_CN" />
 
@@ -56,8 +57,8 @@ const ogImage = image ? (image.startsWith("http") ? image : `${siteUrl}${image}`
       description: description ?? title,
       url: pageUrl,
       ...(type === "article" ? {} : {
-        author: { "@type": "Person", name: "Sezario", url: siteUrl },
-        publisher: { "@type": "Organization", name: "Sezario.", url: siteUrl },
+        author: { "@type": "Person", name: "Sezario", url: "https://github.com/Sezario1231" },
+        publisher: { "@type": "Organization", name: "Sezario的个人小屋", url: siteUrl },
       }),
     })} />
 
@@ -100,6 +101,7 @@ const ogImage = image ? (image.startsWith("http") ? image : `${siteUrl}${image}`
       <slot />
     </main>
     <Footer />
+    <CosmicEnding client:idle />
 
     <button
       id="back-to-top"
@@ -166,7 +168,7 @@ const ogImage = image ? (image.startsWith("http") ? image : `${siteUrl}${image}`
       const scrollTop = window.scrollY;
       const docHeight = document.documentElement.scrollHeight - window.innerHeight;
       const progress = docHeight > 0 ? scrollTop / docHeight : 0;
-      bar.style.transform = `scaleX(${progress})`;
+      bar!.style.transform = `scaleX(${progress})`;
     }
     window.addEventListener("scroll", update, { passive: true });
     update();
@@ -179,6 +181,32 @@ const ogImage = image ? (image.startsWith("http") ? image : `${siteUrl}${image}`
     initScrollProgress();
   }
 
+  // ====== 前端错误上报 ======
+  function initErrorReport() {
+    try {
+      let sent = 0;
+      const report = (message: string, stack?: string) => {
+        if (sent >= 5) return;
+        sent++;
+        navigator.sendBeacon(
+          "/api/report-error",
+          new Blob(
+            [JSON.stringify({ page: location.pathname, message, stack: stack || "" })],
+            { type: "application/json" }
+          )
+        );
+      };
+      window.addEventListener("error", (e) => report(e.message || "Unknown error", e.error?.stack));
+      window.addEventListener("unhandledrejection", (e) => {
+        const err = e.reason;
+        report(err?.message || "Unhandled rejection", err?.stack);
+      });
+    } catch {
+      /* 上报失败静默忽略 */
+    }
+  }
+
   document.addEventListener("DOMContentLoaded", onNavigation);
   document.addEventListener("astro:page-load", onNavigation);
+  initErrorReport();
 </script>

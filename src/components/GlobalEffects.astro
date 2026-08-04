@@ -21,11 +21,11 @@
 </div>
 
 <script>
-  let lightboxImages = [];
+  let lightboxImages: HTMLImageElement[] = [];
   let lightboxIndex = 0;
-  let prevController = null;
+  let prevController: AbortController | null = null;
 
-  function showToast(text) {
+  function showToast(text: string) {
     const toast = document.getElementById("shortcut-toast");
     const toastText = document.getElementById("shortcut-toast-text");
     if (!toast || !toastText) return;
@@ -40,16 +40,16 @@
 
   function isTyping() {
     const el = document.activeElement;
-    return el?.tagName === "INPUT" || el?.tagName === "TEXTAREA" || el?.isContentEditable;
+    return el?.tagName === "INPUT" || el?.tagName === "TEXTAREA" || (el as HTMLElement)?.isContentEditable;
   }
 
-  function openLightbox(img) {
+  function openLightbox(img: HTMLImageElement) {
     const lightbox = document.getElementById("lightbox");
-    const lightboxImg = document.getElementById("lightbox-img");
+    const lightboxImg = document.getElementById("lightbox-img") as HTMLImageElement | null;
     const caption = document.getElementById("lightbox-caption");
     if (!lightbox || !lightboxImg) return;
 
-    lightboxImages = Array.from(document.querySelectorAll(".prose img, .article-content img"));
+    lightboxImages = Array.from(document.querySelectorAll(".prose img, .article-content img")) as HTMLImageElement[];
     lightboxIndex = lightboxImages.indexOf(img);
 
     lightboxImg.src = img.src;
@@ -67,11 +67,11 @@
     }
   }
 
-  function navigateLightbox(dir) {
+  function navigateLightbox(dir: number) {
     if (lightboxImages.length === 0) return;
     lightboxIndex = (lightboxIndex + dir + lightboxImages.length) % lightboxImages.length;
-    const img = lightboxImages[lightboxIndex];
-    const lightboxImg = document.getElementById("lightbox-img");
+    const img = lightboxImages[lightboxIndex]!;
+    const lightboxImg = document.getElementById("lightbox-img") as HTMLImageElement | null;
     const caption = document.getElementById("lightbox-caption");
     if (lightboxImg) {
       lightboxImg.src = img.src;
@@ -93,7 +93,7 @@
         const title = document.title;
         try {
           const bookmarks = JSON.parse(localStorage.getItem("bookmarks") || "[]");
-          const exists = bookmarks.some((b) => b.url === url);
+          const exists = bookmarks.some((b: { url: string }) => b.url === url);
           if (!exists) {
             bookmarks.push({ url, title, date: new Date().toISOString() });
             localStorage.setItem("bookmarks", JSON.stringify(bookmarks));
@@ -107,14 +107,14 @@
       if ((e.ctrlKey || e.metaKey) && e.key === "\\") {
         e.preventDefault();
         const toggleBtn = document.querySelector("[aria-label='切换主题']");
-        if (toggleBtn) toggleBtn.click();
+        if (toggleBtn) (toggleBtn as HTMLElement).click();
         showToast("切换主题");
       }
 
       if (e.key === "e" && !e.ctrlKey && !e.metaKey && !isTyping()) {
         const editLink = document.querySelector("[data-edit-url]");
         if (editLink) {
-          window.open(editLink.dataset.editUrl, "_blank");
+          window.open((editLink as HTMLElement).dataset.editUrl, "_blank");
         }
       }
     }, { signal });
@@ -134,8 +134,8 @@
     }, { signal });
 
     document.querySelectorAll(".prose img, .article-content img").forEach((img) => {
-      img.style.cursor = "zoom-in";
-      img.addEventListener("click", () => openLightbox(img), { signal });
+      (img as HTMLElement).style.cursor = "zoom-in";
+      img.addEventListener("click", () => openLightbox(img as HTMLImageElement), { signal });
     });
   }
 

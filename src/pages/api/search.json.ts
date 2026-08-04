@@ -1,22 +1,23 @@
 import type { APIRoute } from "astro";
-import { getCollection } from "astro:content";
+import { getPosts } from "@/lib/posts";
 
-export const prerender = true;
+export const prerender = false;
 
 export const GET: APIRoute = async () => {
-  const allPosts = await getCollection("posts");
-  const posts = allPosts
-    .filter((p) => !p.data.draft)
-    .map((p) => ({
-      title: p.data.title,
-      description: p.data.description,
-      slug: p.slug,
-      category: p.data.category,
-      tags: p.data.tags,
-      date: p.data.date.toISOString(),
-    }));
+  const posts = await getPosts();
+  const searchData = posts.map((p) => ({
+    title: p.title,
+    description: p.description,
+    slug: p.slug,
+    category: p.category,
+    tags: p.tags,
+    date: p.date.toISOString(),
+  }));
 
-  return new Response(JSON.stringify(posts), {
-    headers: { "Content-Type": "application/json" },
+  return new Response(JSON.stringify(searchData), {
+    headers: {
+      "Content-Type": "application/json",
+      "Cache-Control": "public, max-age=1800",
+    },
   });
 };

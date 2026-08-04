@@ -8,8 +8,8 @@ export default function CursorFollower() {
     if (window.matchMedia("(pointer: coarse)").matches) return;
     if (window.innerWidth < 768) return;
 
-    const dot = dotRef.current;
-    const ring = ringRef.current;
+    const dot = dotRef.current!;
+    const ring = ringRef.current!;
     if (!dot || !ring) return;
 
     let mouseX = 0, mouseY = 0;

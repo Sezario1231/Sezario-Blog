@@ -46,9 +46,9 @@
 
   let currentTrack = 0;
   let playing = false;
-  let audio = null;
+  let audio: HTMLAudioElement | null = null;
   let progressRaf = 0;
-  let prevController = null;
+  let prevController: AbortController | null = null;
 
   function getAudio() {
     if (audio) return audio;
@@ -62,7 +62,7 @@
     return audio;
   }
 
-  function loadTrack(index, autoplay) {
+  function loadTrack(index: number, autoplay: boolean) {
     currentTrack = index;
     const a = getAudio();
     const src = playlist[index].url;
@@ -87,7 +87,7 @@
     }
     const player = document.getElementById("music-player");
     const disc = player?.querySelector(".music-disc");
-    if (disc) disc.style.animationPlayState = playing ? "running" : "paused";
+    if (disc) (disc as HTMLElement).style.animationPlayState = playing ? "running" : "paused";
 
     const titleEl = document.getElementById("music-title");
     const artistEl = document.getElementById("music-artist");
@@ -122,12 +122,12 @@
     const panel = document.getElementById("music-panel");
     const playBtn = document.getElementById("music-play-btn");
     const playlistEl = document.getElementById("music-playlist");
-    const volumeEl = document.getElementById("music-volume");
+    const volumeEl = document.getElementById("music-volume") as HTMLInputElement | null;
 
     getAudio();
 
     if (volumeEl) {
-      volumeEl.value = String(audio.volume * 100);
+      volumeEl.value = String(audio!.volume * 100);
       volumeEl.oninput = () => { if (audio) audio.volume = volumeEl.valueAsNumber / 100; };
     }
 
@@ -163,7 +163,7 @@
     }, { signal });
 
     playlistEl?.addEventListener("click", (e) => {
-      const track = e.target.closest(".music-track");
+      const track = (e.target as HTMLElement | null)?.closest(".music-track") as HTMLElement | null;
       if (track) {
         const idx = parseInt(track.dataset.index || "0");
         loadTrack(idx, true);

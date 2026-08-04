@@ -18,7 +18,7 @@ export default function ParticleCanvas() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    let animationId: number;
+    let animationId!: number;
     let mouse = { x: -1000, y: -1000 };
     const isMobile = window.innerWidth < 768;
     const PARTICLE_COUNT = isMobile ? 20 : 50;
