@@ -42,8 +42,9 @@ const currentIndex = publishedPosts.findIndex((p) => p.slug === slug);
 const prevPost = currentIndex < publishedPosts.length - 1 ? publishedPosts[currentIndex + 1] : null;
 const nextPost = currentIndex > 0 ? publishedPosts[currentIndex - 1] : null;
 
-const wordCount = post.body ? post.body.split(/\s+/).length : 0;
-const readingTime = Math.max(1, Math.ceil(wordCount / 200));
+const cjkChars = (post.body.match(/[\u4e00-\u9fff\u3400-\u4dbf]/g) || []).length;
+const latinWords = post.body.replace(/[\u4e00-\u9fff\u3400-\u4dbf]/g, " ").split(/\s+/).filter(Boolean).length;
+const readingTime = Math.max(1, Math.ceil(cjkChars / 400 + latinWords / 200));
 
 const headingRegex = /^(#{2,3})\s+(.+)$/gm;
 const tocHeadings: { depth: number; slug: string; text: string }[] = [];
