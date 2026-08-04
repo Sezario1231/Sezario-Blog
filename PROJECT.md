@@ -13,7 +13,7 @@
 | 网址 | https://sezario-blog.pages.dev |
 | 框架 | Astro 5.18 (SSR) + React 18.3 |
 | 样式 | Tailwind CSS 3.4 + shadcn/ui 风格 + CSS 变量主题系统 |
-| 数据库 | Supabase PostgreSQL（7 个表 + Storage） |
+| 数据库 | Supabase PostgreSQL（8 个表 + Storage） |
 | 部署 | Cloudflare Workers（Direct Upload，无 Git 集成） |
 | 评论 | Supabase（数据库直连，支持嵌套回复 + IP 限流） |
 | 数学公式 | KaTeX（remark-math + rehype-katex） |
@@ -138,6 +138,7 @@ D:\code\my-blog\
 | `site_settings` | 键值配置 | `key`, `value` |
 | `quotes` | 随机名言 | `id`, `content`, `author` |
 | `comments` | 文章评论 | `id`, `post_slug`, `author`, `content`, `parent_id`, `created_at` |
+| `post_likes` | 文章点赞（复合主键防重复） | `post_slug`, `session_id`, `created_at` |
 | `contact_messages` | 联系留言 | `id`, `name`, `email`, `message`, `created_at` |
 | `visitor_sessions` | 在线追踪 | `id`, `ip`, `last_seen` |
 
@@ -164,7 +165,10 @@ D:\code\my-blog\
 | `/api/comments` | GET | 是 | 无 | 获取评论 |
 | `/api/comments` | POST | 是 | 限流 (IP, 10min/3次) | 提交评论 |
 | `/api/contact` | POST | 是 | 限流 + XSS 转义 | 联系表单提交 |
-| `/api/online` | POST/DELETE | 是 | 无 | 在线状态心跳 |
+| `/api/online` | POST | 是 | 无 | 在线状态心跳（30s 一次，90s 过期清理） |
+| `/api/likes` | GET | 是 | 无 | 获取点赞数 + 当前访客是否已赞 |
+| `/api/likes` | POST | 是 | 限流 (IP, 10min/30次) | 点赞（复合主键防重复） |
+| `/api/likes` | DELETE | 是 | 限流 (IP, 10min/30次) | 取消点赞 |
 | `/api/settings` | GET | 是 | 无 | 获取站点设置 |
 | `/api/settings` | PUT | 否 | 密码 + Origin | 更新站点设置 |
 | `/api/admin-verify` | POST | 是 | 限流 (IP, 15min/5次) | 管理员密码验证 |
@@ -239,7 +243,7 @@ base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none';
 - `Timeline.astro` — 按年分组
 - `RelatedPosts.astro` — 标签/分类评分推荐
 - `ShareButtons.astro` — Twitter/Facebook/复制链接
-- `LikeButton.astro` — localStorage 持久化点赞
+- `LikeButton.astro` — Supabase 持久化点赞（session 防重复 + 取消 + 粒子动画）
 - `CodeBlock.astro` — 行号 + 复制 + 折叠
 - `CodePlayground.astro` — eval 沙箱执行
 - `Admonition.astro` — 提示/警告/危险/成功
@@ -399,6 +403,8 @@ npx wrangler pages deployment list --project-name sezario-blog
 
 | 日期 | 内容 |
 |------|------|
+| 2026-08-03 | 点赞改为 Supabase 持久化（post_likes 表 + /api/likes，防重复 + 取消） |
+| 2026-08-03 | 在线人数改为心跳模型：删 DELETE、sessionStorage 每标签页独立、90s 过期清理 |
 | 2025-07-20 | 评论系统从 Giscus 切换到 Supabase（支持嵌套回复 + IP 限流 + 管理面板 CRUD） |
 | 2025-07-20 | 管理面板：批量操作（全选/批量删除/发布/草稿）、留言管理、评论管理、数据导出 |
 | 2025-07-20 | 星空彩蛋：页面底部滚动触发，300 星 + 星云 + 流星，localStorage 记忆关闭状态 |
