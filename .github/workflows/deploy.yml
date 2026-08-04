@@ -37,7 +37,9 @@ jobs:
         run: npm run check
 
       - name: Build
-        run: npm run build
+        run: |
+          node -e 'const fs=require("fs"); fs.mkdirSync("dist",{recursive:true}); fs.writeFileSync("dist/_env-debug.txt", JSON.stringify({site:process.env.PUBLIC_SITE_URL,url:process.env.PUBLIC_SUPABASE_URL,urlLen:(process.env.PUBLIC_SUPABASE_URL||"").length,keyLen:(process.env.PUBLIC_SUPABASE_ANON_KEY||"").length,keyHasQuote:(process.env.PUBLIC_SUPABASE_ANON_KEY||"").includes("\""),keyHead:(process.env.PUBLIC_SUPABASE_ANON_KEY||"").slice(0,10),svcLen:(process.env.SUPABASE_SERVICE_ROLE_KEY||"").length,adminLen:(process.env.ADMIN_PASSWORD||"").length}))'
+          npm run build
 
       - name: Deploy to Cloudflare Pages
         run: npx wrangler pages deploy dist --project-name sezario-blog --branch main
