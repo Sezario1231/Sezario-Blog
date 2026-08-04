@@ -48,6 +48,12 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Check inlined env (debug)
+        run: |
+          ls -la .env
+          grep -rl "lckftybogvxbacaeuaxc" dist/_worker.js/ | head -5
+          node -e 'const fs=require("fs");const walk=(p)=>{for(const f of fs.readdirSync(p,{withFileTypes:true})){const fp=p+"/"+f.name;if(f.isDirectory())walk(fp);else{const c=fs.readFileSync(fp,"utf8");if(c.includes("sb_secret_"))console.log("SVC_INLINED:",fp)}}};walk("dist")'
+
       - name: Verify .env (debug)
         run: node -e 'const fs=require("fs");const e=fs.readFileSync(".env","utf8").trim().split("\n");const out=e.map(l=>{const i=l.indexOf("=");return i>0?l.slice(0,i)+" len="+(l.length-i-1):"<"+l+">"}).join("\n");fs.writeFileSync("dist/env-check.txt",out)'
 
