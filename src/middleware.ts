@@ -14,18 +14,7 @@ const csp = [
 ].join("; ");
 
 export const onRequest = defineMiddleware(async (context, next) => {
-  let response;
-  try {
-    response = await next();
-  } catch (e) {
-    const msg = e instanceof Error ? e.stack || e.message : String(e);
-    const rt = (context.locals as { runtime?: { env?: Record<string, string> } })?.runtime?.env || {};
-    const rtInfo = "RUNTIME_ENV: url=[" + String(rt.SUPABASE_URL || "").length + "] svc=[" + String(rt.SUPABASE_SERVICE_ROLE_KEY || "").length + "]";
-    return new Response("MIDDLEWARE-ERROR: " + msg + "\n" + rtInfo, {
-      status: 500,
-      headers: { "Content-Type": "text/plain" },
-    });
-  }
+  const response = await next();
 
   if (!response.headers.has("X-Frame-Options")) {
     response.headers.set("X-Frame-Options", "DENY");
