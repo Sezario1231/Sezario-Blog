@@ -19,7 +19,9 @@ export const onRequest = defineMiddleware(async (_context, next) => {
     response = await next();
   } catch (e) {
     const msg = e instanceof Error ? e.stack || e.message : String(e);
-    return new Response("MIDDLEWARE-ERROR: " + msg, {
+    const rt = (context.locals as { runtime?: { env?: Record<string, string> } })?.runtime?.env || {};
+    const rtInfo = "RUNTIME_ENV: url=[" + String(rt.SUPABASE_URL || "").length + "] svc=[" + String(rt.SUPABASE_SERVICE_ROLE_KEY || "").length + "]";
+    return new Response("MIDDLEWARE-ERROR: " + msg + "\n" + rtInfo, {
       status: 500,
       headers: { "Content-Type": "text/plain" },
     });
