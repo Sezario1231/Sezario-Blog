@@ -3,7 +3,7 @@ import { getSupabase } from "@/lib/supabase";
 
 export const prerender = false;
 
-const STALE_THRESHOLD_MS = 60_000;
+const STALE_THRESHOLD_MS = 90_000;
 
 export const POST: APIRoute = async ({ request }) => {
   const body = await request.json().catch(() => null);
@@ -36,31 +36,6 @@ export const POST: APIRoute = async ({ request }) => {
     .from("visitor_sessions")
     .delete()
     .lt("last_seen", cutoff);
-
-  const { count } = await supabase
-    .from("visitor_sessions")
-    .select("*", { count: "exact", head: true });
-
-  return new Response(JSON.stringify({ count: count ?? 0 }), {
-    status: 200,
-    headers: { "Content-Type": "application/json" },
-  });
-};
-
-export const DELETE: APIRoute = async ({ request }) => {
-  const body = await request.json().catch(() => null);
-  if (!body?.session_id) {
-    return new Response(JSON.stringify({ error: "session_id required" }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
-
-  const supabase = getSupabase();
-  await supabase
-    .from("visitor_sessions")
-    .delete()
-    .eq("session_id", body.session_id);
 
   const { count } = await supabase
     .from("visitor_sessions")

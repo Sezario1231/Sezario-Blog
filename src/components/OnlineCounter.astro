@@ -9,14 +9,14 @@
 </div>
 
 <script>
-  let sessionId = localStorage.getItem("online_session_id");
+  let sessionId = sessionStorage.getItem("online_session_id");
   if (!sessionId) {
     sessionId = crypto.randomUUID();
-    localStorage.setItem("online_session_id", sessionId);
+    sessionStorage.setItem("online_session_id", sessionId);
   }
 
   let heartbeatTimer: ReturnType<typeof setInterval> | null = null;
-  let isDestroyed = false;
+  let destroyed = false;
 
   function updateCount(count: number) {
     const el = document.getElementById("online-count");
@@ -24,7 +24,7 @@
   }
 
   async function sendHeartbeat() {
-    if (isDestroyed) return;
+    if (destroyed) return;
     try {
       const res = await fetch("/api/online", {
         method: "POST",
@@ -38,47 +38,25 @@
     } catch {}
   }
 
-  function initOnlineCounter() {
-    isDestroyed = false;
-    sendHeartbeat();
-    heartbeatTimer = setInterval(sendHeartbeat, 30_000);
+  function onVisible() {
+    if (!destroyed && document.visibilityState === "visible") sendHeartbeat();
+  }
 
+  function initOnlineCounter() {
+    destroyed = false;
+    sendHeartbeat();
+    if (heartbeatTimer) clearInterval(heartbeatTimer);
+    heartbeatTimer = setInterval(sendHeartbeat, 30_000);
     document.addEventListener("visibilitychange", onVisible);
-    window.addEventListener("beforeunload", onLeave);
   }
 
   function destroyOnlineCounter() {
-    isDestroyed = true;
+    destroyed = true;
     if (heartbeatTimer) {
       clearInterval(heartbeatTimer);
       heartbeatTimer = null;
     }
     document.removeEventListener("visibilitychange", onVisible);
-    window.removeEventListener("beforeunload", onLeave);
-    sendLeave();
-  }
-
-  function onVisible() {
-    if (document.visibilityState === "visible") sendHeartbeat();
-  }
-
-  function onLeave() {
-    navigator.sendBeacon(
-      "/api/online",
-      new Blob([JSON.stringify({ session_id: sessionId })], {
-        type: "application/json",
-      })
-    );
-  }
-
-  async function sendLeave() {
-    try {
-      await fetch("/api/online", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ session_id: sessionId }),
-      });
-    } catch {}
   }
 
   document.addEventListener("DOMContentLoaded", initOnlineCounter);
