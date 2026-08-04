@@ -62,6 +62,13 @@ jobs:
           ls dist/_worker.js/ >> dist/inline-check.txt
           cat dist/inline-check.txt
 
+      - name: Dump supabase snippet (debug)
+        run: |
+          SRC=$(find dist/_worker.js/chunks -name 'supabase_*.mjs' | head -1)
+          echo "chunk: $SRC" > dist/snippet2.txt
+          node -e "const s=require('fs').readFileSync(process.argv[1],'utf8'); const i=s.indexOf('\u73af\u5883\u53d8\u91cf\u672a\u914d\u7f6e'); console.log('marker at:', i); console.log(s.slice(Math.max(0,i-600), i+300));" "$SRC" >> dist/snippet2.txt 2>&1
+          cat dist/snippet2.txt
+
       - name: Verify .env (debug)
         run: node -e 'const fs=require("fs");const e=fs.readFileSync(".env","utf8").trim().split("\n");const out=e.map(l=>{const i=l.indexOf("=");return i>0?l.slice(0,i)+" len="+(l.length-i-1):"<"+l+">"}).join("\n");fs.writeFileSync("dist/env-check.txt",out)'
 
