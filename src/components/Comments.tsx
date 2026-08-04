@@ -7,6 +7,7 @@ interface Comment {
   content: string;
   parent_id: string | null;
   created_at: string;
+  avatar_url: string | null;
 }
 
 interface CommentsProps {
@@ -195,6 +196,28 @@ export default function Comments({ slug }: CommentsProps) {
   );
 }
 
+function CommentAvatar({ comment, size }: { comment: Comment; size: string }) {
+  const [failed, setFailed] = useState(false);
+  if (!comment.avatar_url || failed) {
+    return (
+      <div
+        className={`${size} rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium text-primary shrink-0`}
+      >
+        {comment.author.charAt(0).toUpperCase()}
+      </div>
+    );
+  }
+  return (
+    <img
+      src={comment.avatar_url}
+      alt={comment.author}
+      loading="lazy"
+      onError={() => setFailed(true)}
+      className={`${size} rounded-full shrink-0 object-cover bg-muted`}
+    />
+  );
+}
+
 function CommentItem({
   comment,
   replies,
@@ -209,9 +232,7 @@ function CommentItem({
   return (
     <div className="border-b border-border/40 pb-5 last:border-0">
       <div className="flex items-start gap-3">
-        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium text-primary shrink-0">
-          {comment.author.charAt(0).toUpperCase()}
-        </div>
+        <CommentAvatar comment={comment} size="w-8 h-8" />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <span className="text-sm font-medium">{comment.author}</span>

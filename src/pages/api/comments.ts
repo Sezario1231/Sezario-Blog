@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { getSupabase } from "@/lib/supabase";
 import { escapeHtml, normalizeWhitespace, maskIp } from "@/lib/sanitize";
+import { emailToGravatar } from "@/lib/avatar";
 
 export const prerender = false;
 
@@ -45,7 +46,7 @@ export const GET: APIRoute = async ({ url }) => {
     const supabase = getSupabase();
     const { data, error } = await supabase
       .from("comments")
-      .select("id, post_slug, author, content, parent_id, created_at")
+      .select("id, post_slug, author, email, content, parent_id, created_at")
       .eq("post_slug", slug)
       .order("created_at", { ascending: true });
 
@@ -57,7 +58,12 @@ export const GET: APIRoute = async ({ url }) => {
       });
     }
 
-    return new Response(JSON.stringify({ success: true, comments: data }), {
+    const comments = (data ?? []).map(({ email, ...rest }) => ({
+      ...rest,
+      avatar_url: email ? emailToGravatar(email) : null,
+    }));
+
+    return new Response(JSON.stringify({ success: true, comments }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
