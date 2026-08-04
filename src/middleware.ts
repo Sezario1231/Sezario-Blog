@@ -18,10 +18,11 @@ export const onRequest = defineMiddleware(async (_context, next) => {
   try {
     response = await next();
   } catch (e) {
-    return new Response(
-      "MIDDLEWARE-ERROR: " + ((e && (e.stack || e.message)) || String(e)),
-      { status: 500, headers: { "Content-Type": "text/plain" } }
-    );
+    const msg = e instanceof Error ? e.stack || e.message : String(e);
+    return new Response("MIDDLEWARE-ERROR: " + msg, {
+      status: 500,
+      headers: { "Content-Type": "text/plain" },
+    });
   }
 
   if (!response.headers.has("X-Frame-Options")) {
