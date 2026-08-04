@@ -14,7 +14,15 @@ const csp = [
 ].join("; ");
 
 export const onRequest = defineMiddleware(async (_context, next) => {
-  const response = await next();
+  let response;
+  try {
+    response = await next();
+  } catch (e) {
+    return new Response(
+      "MIDDLEWARE-ERROR: " + ((e && (e.stack || e.message)) || String(e)),
+      { status: 500, headers: { "Content-Type": "text/plain" } }
+    );
+  }
 
   if (!response.headers.has("X-Frame-Options")) {
     response.headers.set("X-Frame-Options", "DENY");
