@@ -8,6 +8,7 @@
   <div class="nebula-veil"></div>
   <div class="nebula-stars"></div>
   <canvas class="nebula-canvas absolute inset-0 w-full h-full"></canvas>
+  <div class="fade-frame"></div>
 </div>
 
 <style>
@@ -120,6 +121,16 @@
     .nebula, .nebula-veil, .nebula-stars {
       animation: none !important;
     }
+  }
+
+  /* 上下双向渐隐过渡，让炫彩背景自然融入页面 */
+  .fade-frame {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(to bottom, hsl(var(--background) / 1) 0%, hsl(var(--background) / 0) 16%),
+      linear-gradient(to top, hsl(var(--background) / 1) 0%, hsl(var(--background) / 0) 28%);
   }
 </style>
 
