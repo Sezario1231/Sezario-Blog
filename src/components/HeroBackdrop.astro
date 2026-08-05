@@ -1,4 +1,4 @@
----
+﻿---
 ---
 
 <div class="hero-backdrop absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
@@ -126,10 +126,10 @@
 <script>
   function initCosmicCanvas() {
     const canvas = document.querySelector<HTMLCanvasElement>(".nebula-canvas");
-    if (!canvas || canvas.dataset.inited === "1") return;
-    canvas.dataset.inited = "1";
+    if (!canvas || canvas!.dataset.inited === "1") return;
+    canvas!.dataset.inited = "1";
 
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas!.getContext("2d");
     if (!ctx) return;
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -141,13 +141,13 @@
     const mouse = { x: -9999, y: -9999 };
 
     function resize() {
-      const rect = canvas.getBoundingClientRect();
+      const rect = canvas!.getBoundingClientRect();
       w = rect.width;
       h = rect.height;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = Math.round(w * dpr);
-      canvas.height = Math.round(h * dpr);
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      canvas!.width = Math.round(w * dpr);
+      canvas!.height = Math.round(h * dpr);
+      ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
     resize();
 
@@ -164,7 +164,7 @@
     }
 
     function draw() {
-      ctx.clearRect(0, 0, w, h);
+      ctx!.clearRect(0, 0, w, h);
 
       for (const p of pts) {
         p.x += p.vx;
@@ -181,11 +181,11 @@
           const dy = pts[i].y - pts[j].y;
           const d = Math.sqrt(dx * dx + dy * dy);
           if (d < LINK) {
-            ctx.strokeStyle = `rgba(251, 146, 60, ${(1 - d / LINK) * 0.16})`;
-            ctx.beginPath();
-            ctx.moveTo(pts[i].x, pts[i].y);
-            ctx.lineTo(pts[j].x, pts[j].y);
-            ctx.stroke();
+            ctx!.strokeStyle = `rgba(251, 146, 60, ${(1 - d / LINK) * 0.16})`;
+            ctx!.beginPath();
+            ctx!.moveTo(pts[i].x, pts[i].y);
+            ctx!.lineTo(pts[j].x, pts[j].y);
+            ctx!.stroke();
           }
         }
       }
@@ -194,17 +194,17 @@
         const dm = Math.hypot(mouse.x - p.x, mouse.y - p.y);
         const near = dm < 150;
         const glow = near ? 9 : 4;
-        const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, glow);
+        const g = ctx!.createRadialGradient(p.x, p.y, 0, p.x, p.y, glow);
         g.addColorStop(0, near ? "rgba(255,180,90,0.9)" : "rgba(251,146,60,0.7)");
         g.addColorStop(1, "rgba(251,146,60,0)");
-        ctx.fillStyle = g;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, glow, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = `rgba(255,200,140,${near ? 0.9 : 0.5})`;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fill();
+        ctx!.fillStyle = g;
+        ctx!.beginPath();
+        ctx!.arc(p.x, p.y, glow, 0, Math.PI * 2);
+        ctx!.fill();
+        ctx!.fillStyle = `rgba(255,200,140,${near ? 0.9 : 0.5})`;
+        ctx!.beginPath();
+        ctx!.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx!.fill();
       }
     }
 
@@ -219,7 +219,7 @@
     }
 
     const handleMove = (e: MouseEvent) => {
-      const rect = canvas.getBoundingClientRect();
+      const rect = canvas!.getBoundingClientRect();
       mouse.x = e.clientX - rect.left;
       mouse.y = e.clientY - rect.top;
     };
