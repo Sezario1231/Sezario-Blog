@@ -1,7 +1,6 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import HeroSection from "@/components/HeroSection.astro";
-import HeroBackdrop from "@/components/HeroBackdrop.astro";
 import DotGrid from "@/components/DotGrid.astro";
 import ScrollIndicator from "@/components/ScrollIndicator.astro";
 import ArticleCard from "@/components/ArticleCard";
@@ -15,7 +14,6 @@ const latestPosts = allPosts.slice(0, 6);
 
 <BaseLayout title="Sezario的个人小屋" description="尝试了解AI｜喜欢折腾｜记录学习日常">
   <div class="relative">
-    <HeroBackdrop />
     <DotGrid />
     <HeroSection />
     <ScrollIndicator />
