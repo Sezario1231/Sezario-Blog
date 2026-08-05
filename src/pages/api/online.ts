@@ -1,11 +1,22 @@
 import type { APIRoute } from "astro";
 import { getSupabase } from "@/lib/supabase";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export const prerender = false;
 
 const STALE_THRESHOLD_MS = 90_000;
+const RATE_LIMIT_COUNT = 10;
+const RATE_LIMIT_WINDOW_MS = 60_000;
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, clientAddress, locals }) => {
+  const ip = request.headers.get("cf-connecting-ip") || clientAddress || "unknown";
+  if (await checkRateLimit(locals, "online", ip, RATE_LIMIT_COUNT, RATE_LIMIT_WINDOW_MS)) {
+    return new Response(JSON.stringify({ error: "too many requests" }), {
+      status: 429,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
   const body = await request.json().catch(() => null);
   if (!body?.session_id) {
     return new Response(JSON.stringify({ error: "session_id required" }), {

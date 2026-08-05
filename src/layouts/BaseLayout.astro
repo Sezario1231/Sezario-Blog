@@ -15,9 +15,10 @@ export interface Props {
   description?: string;
   image?: string;
   type?: string;
+  minimal?: boolean;
 }
 
-const { title, description, image, type = "website" } = Astro.props;
+const { title, description, image, type = "website", minimal = false } = Astro.props;
 const siteUrl = Astro.site?.toString().replace(/\/$/, "") || "";
 const pageUrl = `${siteUrl}${Astro.url.pathname}`;
 const ogImage = image ? (image.startsWith("http") ? image : `${siteUrl}${image}`) : `${siteUrl}/og-default.png`;
@@ -62,9 +63,6 @@ const ogImage = image ? (image.startsWith("http") ? image : `${siteUrl}${image}`
       }),
     })} />
 
-    <link rel="stylesheet" href="/katex.min.css" />
-
-    <!-- 路由预取 -->
     <meta name="astro-prefetch" content="hover" />
 
     <title>{title}</title>
@@ -94,14 +92,14 @@ const ogImage = image ? (image.startsWith("http") ? image : `${siteUrl}${image}`
     <!-- 真实滚动进度条 -->
     <div id="scroll-progress" class="fixed top-0 left-0 right-0 z-[100] h-[3px] bg-gradient-to-r from-primary via-orange-400 to-primary scale-x-0 origin-left"></div>
 
-    <AuroraBackground />
-    <ParticleCanvas client:idle />
+    {!minimal && <AuroraBackground />}
+    {!minimal && <ParticleCanvas client:idle />}
     <Header />
     <main class="flex-1 pt-14 md:pt-16 relative z-10">
       <slot />
     </main>
     <Footer />
-    <CosmicEnding client:idle />
+    {!minimal && <CosmicEnding client:idle />}
 
     <button
       id="back-to-top"
@@ -113,8 +111,8 @@ const ogImage = image ? (image.startsWith("http") ? image : `${siteUrl}${image}`
       </svg>
     </button>
     <GlobalEffects />
-    <EasterEggs />
-    <MusicPlayer />
+    {!minimal && <EasterEggs />}
+    {!minimal && <MusicPlayer />}
   </body>
 </html>
 

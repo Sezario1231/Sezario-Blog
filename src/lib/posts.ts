@@ -10,7 +10,7 @@ export interface BlogPost {
   tags: string[];
   coverImage?: string;
   draft: boolean;
-  body: string;
+  body?: string;
   password?: string;
 }
 
@@ -23,7 +23,7 @@ interface SupabasePost {
   tags: string | string[];
   cover_image?: string;
   draft: boolean;
-  body: string;
+  body?: string;
   password?: string;
   created_at: string;
 }
@@ -52,14 +52,16 @@ function mapPost(row: SupabasePost): BlogPost {
     tags,
     coverImage: row.cover_image || undefined,
     draft: row.draft,
-    body: row.body,
+    body: row.body ?? "",
     password: row.password || undefined,
   };
 }
 
+const LIST_SELECT = "id, slug, title, description, category, tags, cover_image, draft, created_at";
+
 export async function getPosts(options?: { includeDrafts?: boolean }): Promise<BlogPost[]> {
   const supabase = getSupabase();
-  let query = supabase.from("posts").select("*").order("created_at", { ascending: false });
+  let query = supabase.from("posts").select(LIST_SELECT).order("created_at", { ascending: false });
   if (!options?.includeDrafts) {
     query = query.eq("draft", false);
   }

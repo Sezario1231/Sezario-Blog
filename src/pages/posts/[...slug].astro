@@ -42,21 +42,25 @@ const currentIndex = publishedPosts.findIndex((p) => p.slug === slug);
 const prevPost = currentIndex < publishedPosts.length - 1 ? publishedPosts[currentIndex + 1] : null;
 const nextPost = currentIndex > 0 ? publishedPosts[currentIndex - 1] : null;
 
-const cjkChars = (post.body.match(/[\u4e00-\u9fff\u3400-\u4dbf]/g) || []).length;
-const latinWords = post.body.replace(/[\u4e00-\u9fff\u3400-\u4dbf]/g, " ").split(/\s+/).filter(Boolean).length;
+const bodyText = post.body ?? "";
+const cjkChars = (bodyText.match(/[\u4e00-\u9fff\u3400-\u4dbf]/g) || []).length;
+const latinWords = bodyText.replace(/[\u4e00-\u9fff\u3400-\u4dbf]/g, " ").split(/\s+/).filter(Boolean).length;
 const readingTime = Math.max(1, Math.ceil(cjkChars / 400 + latinWords / 200));
 
 const headingRegex = /^(#{2,3})\s+(.+)$/gm;
 const tocHeadings: { depth: number; slug: string; text: string }[] = [];
 let match;
-while ((match = headingRegex.exec(post.body)) !== null) {
+while ((match = headingRegex.exec(bodyText)) !== null) {
   const depth = match[1].length;
   const text = match[2].trim();
   tocHeadings.push({ depth, slug: generateHeadingId(text), text });
 }
+const needsKatex = /(\$\$|\\\(|\\\[|\\begin\{)/.test(bodyText);
 ---
 
-<BaseLayout title={`${post.title} - Sezario的个人小屋`} description={post.description} image={post.coverImage} type="article">
+{needsKatex && <link rel="stylesheet" href="/katex.min.css" />}
+
+<BaseLayout title={`${post.title} - Sezario的个人小屋`} description={post.description} image={post.coverImage} type="article" minimal>
   <article class="container max-w-6xl mx-auto px-5 md:px-8 py-16 md:py-24">
     <div class="flex flex-col lg:flex-row gap-12">
       <div class="flex-1 min-w-0 max-w-3xl">
@@ -64,7 +68,7 @@ while ((match = headingRegex.exec(post.body)) !== null) {
 
         {post.coverImage && (
           <div class="mb-8 rounded-2xl overflow-hidden border border-border/40" data-animate>
-            <img src={post.coverImage} alt={post.title} class="w-full h-48 md:h-64 object-cover" loading="lazy" />
+            <img src={post.coverImage} alt={post.title} class="w-full h-48 md:h-64 object-cover" loading="lazy" decoding="async" />
           </div>
         )}
 
